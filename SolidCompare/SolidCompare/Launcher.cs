@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace SolidCompare
 {
-    public partial class Form1 : Form
+    public partial class Launcher : Form
     {
-        public Form1()
+        public Launcher()
         {
             InitializeComponent();
         }
