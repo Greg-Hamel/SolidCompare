@@ -1,3 +1,3 @@
 # SolidCompare
 
-Assembly comparison tool for SoldiWorks 2017
+Assembly comparison tool for SolidWorks 2017
