@@ -27,6 +27,9 @@ namespace SolidCompare
 
         private void CompareButton_Click(object sender, EventArgs e)
         {
+            string directory1;
+            string directory2;
+
             try
             {
                 swApp = (SldWorks.SldWorks)Marshal.GetActiveObject("SldWorks.Application");  // Assign SolidWork window to swApp
@@ -39,6 +42,12 @@ namespace SolidCompare
 
             Debug.WriteLine("Handle of SolidWorks was established.");
 
+            directory1 = this.FieldAssemblyDirectory1.Text;
+            directory2 = this.FieldAssemblyDirectory2.Text;
+
+            Debug.WriteLine("Directory1: {0}", directory1);
+            Debug.WriteLine("Directory2: {0}", directory2);
+
             // The following code shall execute the comparison between the two specified fields.
 
         }
@@ -47,5 +56,7 @@ namespace SolidCompare
         {
             
         }
+
+
     }
 }
