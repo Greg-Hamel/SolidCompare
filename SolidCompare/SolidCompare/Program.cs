@@ -12,11 +12,22 @@ namespace SolidCompare
         /// Point d'entrée principal de l'application.
         /// </summary>
         [STAThread]
+
+        class Assembly
+        {
+            private string directory;
+            public Assembly(string dir)
+            {
+                Console.WriteLine("Creating Assembly based on {0}", dir);
+                directory = dir;
+            }
+        }
+
         static void Main()
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            Application.Run(new Launcher());
         }
     }
 }
