@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -21,22 +22,22 @@ namespace SolidCompare
         public Launcher()
         {
             InitializeComponent();
-            Console.WriteLine("Starting SolidCompare");
+            Debug.WriteLine("Starting SolidCompare");
         }
 
         private void CompareButton_Click(object sender, EventArgs e)
         {
             try
             {
-                swApp = (SldWorks.SldWorks)Marshal.GetActiveObject("SldWorks.Application");
+                swApp = (SldWorks.SldWorks)Marshal.GetActiveObject("SldWorks.Application");  // Assign SolidWork window to swApp
             }
             catch
             {
-                MessageBox.Show("Cannot get handle of SolidWorks.");
+                MessageBox.Show("Cannot get handle of SolidWorks.");  // Couldn't find the SolidWorks window.
                 return;
             }
 
-            Console.WriteLine("Handle of SolidWorks was established.");
+            Debug.WriteLine("Handle of SolidWorks was established.");
 
             // The following code shall execute the comparison between the two specified fields.
 
@@ -44,11 +45,7 @@ namespace SolidCompare
 
         private void Launcher_Load(object sender, EventArgs e)
         {
-            AllocConsole();
+            
         }
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool AllocConsole();
     }
 }
