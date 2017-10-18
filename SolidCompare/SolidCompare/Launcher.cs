@@ -25,6 +25,12 @@ namespace SolidCompare
             Debug.WriteLine("Starting SolidCompare");
         }
 
+        public static void DebugFormat(string fmt, params object[] p)
+        {
+            Debug.WriteLine(fmt, p); // this will select the right overload 
+                                     // ... due to typeof(p)==object[]
+        }
+
         private void CompareButton_Click(object sender, EventArgs e)
         {
             string directory1;
@@ -45,8 +51,8 @@ namespace SolidCompare
             directory1 = this.FieldAssemblyDirectory1.Text;
             directory2 = this.FieldAssemblyDirectory2.Text;
 
-            Debug.WriteLine("Directory1: {0}", directory1);
-            Debug.WriteLine("Directory2: {0}", directory2);
+            DebugFormat("Directory1: {0}", directory1);
+            DebugFormat("Directory2: {0}", directory2);
 
             // The following code shall execute the comparison between the two specified fields.
 
