@@ -4,6 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
+using SldWorks;
+using SwConst;
 
 namespace SolidCompare
 {
@@ -17,18 +20,22 @@ namespace SolidCompare
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Launcher());
+            Launcher lcher = new Launcher();
             Debug.WriteLine("SolidCompare Started");
-        }
-    }
+            Application.Run(lcher);
+            Debug.WriteLine("Launcher closed.");
 
-    class Assembly
-    {
-        private string directory;
-        public Assembly(string dir)
-        {
-            Console.WriteLine("Creating Assembly based on {0}", dir);
-            directory = dir;
+            string dir1 = lcher.directory1;
+            string dir2 = lcher.directory2;
+            Debug.WriteLine("test: {0}", dir1, null);
+            Debug.WriteLine("test: {0}", dir2, null);
+
+            Compare start = new Compare(dir1, dir2);
+            start.start();
+
+            MessageBox.Show("Done");
+
         }
+
     }
 }

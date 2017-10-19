@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Compare.cs" />
     <Compile Include="Launcher.cs">
       <SubType>Form</SubType>
     </Compile>
