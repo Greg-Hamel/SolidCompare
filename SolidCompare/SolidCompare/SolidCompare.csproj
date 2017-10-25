@@ -46,6 +46,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assembly.cs" />
+    <Compile Include="Component.cs" />
     <Compile Include="Compare.cs" />
     <Compile Include="Launcher.cs">
       <SubType>Form</SubType>

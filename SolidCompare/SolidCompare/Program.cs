@@ -30,8 +30,8 @@ namespace SolidCompare
             Debug.WriteLine("test: {0}", dir1, null);
             Debug.WriteLine("test: {0}", dir2, null);
 
-            Compare start = new Compare(dir1, dir2);
-            start.start();
+            Compare comparer = new Compare(dir1, dir2);
+            comparer.compare();
 
             MessageBox.Show("Done");
 
