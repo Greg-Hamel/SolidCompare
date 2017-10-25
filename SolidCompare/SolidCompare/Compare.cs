@@ -24,11 +24,25 @@ namespace SolidCompare
             DebugFormat("Directory2: {0}", dir2);
         }
 
-        public void start()
+        private void DebugFormat(string fmt, params object[] p)
         {
-            SldWorks.SldWorks swApp;
-            // ModelDoc2 swModel;
+            Debug.WriteLine(fmt, p); // this will select the right overload 
+                                     // ... due to typeof(p)==object[]
+        }
 
+        public void compare()
+        {
+            // Will launch the sequence of events required by the software 
+
+            SldWorks.SldWorks swApp;
+            ModelDoc2 swModel;
+
+            connect_Sldwks();  // Connect to Solidwork App
+        }
+
+        private void connect_Sldwks()
+        {
+            // Tries to get a handle of the Solidwork App.
             try
             {
                 swApp = (SldWorks.SldWorks)Marshal.GetActiveObject("SldWorks.Application");  // Assign SolidWork window to swApp
@@ -42,12 +56,11 @@ namespace SolidCompare
             Debug.WriteLine("Handle of SolidWorks was established.");
         }
 
-
-        public static void DebugFormat(string fmt, params object[] p)
+        private void load_assemblies()
         {
-            Debug.WriteLine(fmt, p); // this will select the right overload 
-                                     // ... due to typeof(p)==object[]
+            // Loads the two assemblies in dir1 and dir2
+            Assembly Asmbl1 = new Assembly(dir1);
+            Assembly Asmbl2 = new Assembly(dir2);
         }
-
     }
 }
