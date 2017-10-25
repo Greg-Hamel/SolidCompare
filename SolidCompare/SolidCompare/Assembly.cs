@@ -3,24 +3,27 @@ using System.Runtime.InteropServices;
 using SldWorks;
 using SwConst;
 
-public class Assembly
+namespace SolidCompare
 {
-    private string directory;
-
-
-	public Assembly()
-	{
-        
-	}
-
-    public Assembly(string dir)
+    public class Assembly
     {
-        directory = dir;
-    }
+        private string directory;
 
-    public string Directory
-    {
-        get { return directory; }
-        set { directory = value; }
+
+        public Assembly()
+        {
+
+        }
+
+        public Assembly(string dir)
+        {
+            directory = dir;
+        }
+
+        public string Directory
+        {
+            get { return directory; }
+            set { directory = value; }
+        }
     }
 }
