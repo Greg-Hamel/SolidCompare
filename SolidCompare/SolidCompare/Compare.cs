@@ -45,7 +45,7 @@ namespace SolidCompare
             // Tries to get a handle of the Solidwork App.
             try
             {
-                swApp = (SldWorks.SldWorks)Marshal.GetActiveObject("SldWorks.Application");  // Assign SolidWork window to swApp
+                // swApp = (SldWorks.SldWorks)Marshal.GetActiveObject("SldWorks.Application");  // Assign SolidWork window to swApp
             }
             catch
             {
