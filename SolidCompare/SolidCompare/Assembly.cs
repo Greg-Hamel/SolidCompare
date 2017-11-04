@@ -27,11 +27,6 @@ namespace SolidCompare
             Initialize();
         }
 
-        public Assembly(string dir)
-        {
-            directory = dir;
-        }
-
         private void Initialize()
         {
             IFeature swFeature = ((IModelDoc2)this.swAssembly).FirstFeature();
@@ -42,12 +37,6 @@ namespace SolidCompare
                     + " - Name: " + swFeature.Name);
                 swFeature = swFeature.GetNextFeature();
             }
-        }
-
-        public string Directory
-        {
-            get { return directory; }
-            set { directory = value; }
         }
 
         // Return all parts without suppressed
