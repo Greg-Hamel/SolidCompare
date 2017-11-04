@@ -15,12 +15,6 @@ namespace SolidCompare
         private List<IMate2> swMates = new List<IMate2>();
         private List<IFeature> swBodyFeatures = new List<IFeature>();
 
-
-        public Assembly()
-        {
-
-        }
-
         public Assembly(IAssemblyDoc swAssembly)
         {
             this.swAssembly = swAssembly;
@@ -43,6 +37,27 @@ namespace SolidCompare
         public List<Object> GetComponents()
         {
             return new List<Object>((Object[])swAssembly.GetComponents(false));
+        }
+
+        // Return the assembly's directory
+        public List<Object> GetDirectory()
+        {
+            // TBD
+            return null;
+        }
+
+        // Return all files used by the assembly
+        public List<Object> GetUsedFiles()
+        {
+            // TBD
+            return null;
+        }
+
+        // Returns all assembly-wise features
+        public List<Object> GetFeatures()
+        {
+            // TBD
+            return null;
         }
     }
 }
