@@ -16,7 +16,7 @@ namespace SolidCompare
 
         public static void Error(string className, string methodName, string message)
         {
-            Console.WriteLine("[ERROR] " + message + " in method: " + methodName + "of class: " + className);
+            Console.WriteLine("[ERROR] " + message + " in method: " + methodName + " of class: " + className);
         }
     }
 }

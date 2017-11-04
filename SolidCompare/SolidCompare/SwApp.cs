@@ -66,6 +66,7 @@ namespace SolidCompare
         {
             object toolObject = null;
             int errorCode = 0;
+
             string methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
 
             if (null != swUtil)
@@ -82,6 +83,44 @@ namespace SolidCompare
         public static gtcocswCompareGeometry GetSwCompareGeometry()
         {
             return (gtcocswCompareGeometry)GetSwToolInterface(gtSwTools_e.gtSwToolGeomDiff);
+        }
+
+        public static IAssemblyDoc OpenAssembly(string fileName)
+        {
+            IModelDoc2 swModel = default(ModelDoc2);
+            IDocumentSpecification swDocSpecification = default(DocumentSpecification);
+            int errors = 0;
+            int warnings = 0;
+
+            string methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+
+            // Set the specifications
+            swDocSpecification = (IDocumentSpecification)instance.GetOpenDocSpec(fileName);
+            swDocSpecification.Selective = false;
+            swDocSpecification.DocumentType = (int)swDocumentTypes_e.swDocASSEMBLY;
+            // swDocSpecification.DisplayState = "Default_Display State-1";
+            swDocSpecification.UseLightWeightDefault = false;
+            swDocSpecification.LightWeight = false;
+            swDocSpecification.Silent = true;
+            swDocSpecification.IgnoreHiddenComponents = true;
+
+            // Open the assembly document as per the specifications
+            swModel = instance.OpenDoc7(swDocSpecification);
+            errors = swDocSpecification.Error;
+            warnings = swDocSpecification.Warning;
+
+            if (errors != 0)
+            {
+                // See swFileLoadError_e for error codes
+                Logger.Error(typeof(SwApp).FullName, methodName, "Failed to open Assembly. error: " + errors);
+            }
+            if (warnings != 0)
+            {
+                // See swFileLoadWarning_e for warning codes
+                Logger.Warn("Opening Assembly warning: " + warnings);
+            }
+
+            return (IAssemblyDoc)swModel;
         }
     }
 }
