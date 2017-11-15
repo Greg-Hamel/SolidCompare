@@ -48,7 +48,7 @@
   <ItemGroup>
     <Compile Include="Assembly.cs" />
     <Compile Include="Component.cs" />
-    <Compile Include="Compare.cs" />
+    <Compile Include="VolumeCompare.cs" />
     <Compile Include="Launcher.cs">
       <SubType>Form</SubType>
     </Compile>
