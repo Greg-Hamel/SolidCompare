@@ -25,6 +25,9 @@ namespace SolidCompare
             string dir1 = lcher.directory1;
             string dir2 = lcher.directory2;
 
+            SldWorks.SldWorks swApp;
+
+            swApp = SwApp.Instance;
 
             MessageBox.Show("Done");
 

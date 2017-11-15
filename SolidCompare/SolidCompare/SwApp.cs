@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
 using SldWorks;
 using SwConst;
 using SWUtilities;
@@ -9,6 +11,7 @@ namespace SolidCompare
     {
         private static SldWorks.SldWorks instance;
         private static gtcocswUtilities swUtil;
+        private static string swPath = @"C:\Program Files\SOLIDWORKS Corp\SOLIDWORKS\SLDWORKS.exe";  // Change this to your SolidWorks Directory
 
         public static SldWorks.SldWorks Instance
         {
@@ -16,9 +19,38 @@ namespace SolidCompare
             {
                 if (instance == null)
                 {
-                    Logger.Info("Loading SolidWorks...");
-                    instance = new SldWorks.SldWorks();
-                    Logger.Info("SolidWorks loaded");
+                    bool starting = true;
+
+                    try
+                    {
+                        Logger.Info("Looking for running process of SolidWorks...");
+                        instance = (SldWorks.SldWorks)Marshal.GetActiveObject("SldWorks.Application");
+                        Logger.Info("Solidworks already running");
+                    }
+                    catch
+                    {
+                        Logger.Warn("Solidworks does not seem to be running, attempting to start SolidWorks...");
+                        Process.Start(swPath);
+                        Logger.Info("Start command issued...");
+
+                        do
+                        {
+                            Logger.Info("Handshaking with Solidworks...");
+                            try
+                            {
+                                instance = (SldWorks.SldWorks)Marshal.GetActiveObject("SldWorks.Application");
+                                starting = false;
+                                Logger.Info("Solidworks has been started.");
+                            }
+                            catch
+                            {
+                                Logger.Info("Solidworks is still starting... Waiting 1 sec");
+                                System.Threading.Thread.Sleep(1000);
+                            }
+                        } while (starting);
+                    }
+
+                    Logger.Info("SolidWorks handshake completed");
                 }
                 return instance;
             }
