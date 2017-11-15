@@ -15,10 +15,10 @@ namespace SolidCompare
 {
     static class Program
     {
+        public static SldWorks.SldWorks swApp;
+
         static void Main()
         {
-            SldWorks.SldWorks swApp;
-
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Launcher lcher = new Launcher();
