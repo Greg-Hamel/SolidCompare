@@ -35,12 +35,12 @@ namespace SolidCompare
 
                         do
                         {
-                            Logger.Info("Handshaking with Solidworks...");
+                            Logger.Info("Waiting for Solidworks...");
                             try
                             {
                                 instance = (SldWorks.SldWorks)Marshal.GetActiveObject("SldWorks.Application");
                                 starting = false;
-                                Logger.Info("Solidworks has been started.");
+                                Logger.Info("Solidworks has completed its startup sequence.");
                             }
                             catch
                             {
@@ -49,7 +49,8 @@ namespace SolidCompare
                             }
                         } while (starting);
                     }
-
+                    Logger.Info("Handshaking with SolidWorks");
+                    instance = new SldWorks.SldWorks();
                     Logger.Info("SolidWorks handshake completed");
                 }
                 return instance;

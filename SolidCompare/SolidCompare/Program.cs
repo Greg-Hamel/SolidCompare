@@ -4,7 +4,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
+using Microsoft.Win32.SafeHandles;
 using SldWorks;
 using SwConst;
 
@@ -12,22 +15,21 @@ namespace SolidCompare
 {
     static class Program
     {
-
         static void Main()
         {
+            SldWorks.SldWorks swApp;
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Launcher lcher = new Launcher();
-            Debug.WriteLine("SolidCompare Started");
+            Logger.Info("SolidCompare Started");
             Application.Run(lcher);
-            Debug.WriteLine("Launcher closed.");
+            Logger.Info("Launcher closed.");
 
             string dir1 = lcher.directory1;
             string dir2 = lcher.directory2;
 
-            SldWorks.SldWorks swApp;
-
-            swApp = SwApp.Instance;
+            swApp = SwApp.Instance;  // Get SolidWorks
 
             MessageBox.Show("Done");
 
