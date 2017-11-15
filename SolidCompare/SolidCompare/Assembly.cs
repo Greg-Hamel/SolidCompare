@@ -8,7 +8,6 @@ namespace SolidCompare
 {
     public class Assembly
     {
-        private string directory;
         private IAssemblyDoc swAssembly = default(IAssemblyDoc);
         private List<IAssemblyDoc> swSubAssemblies = new List<IAssemblyDoc>();
         private List<IPartDoc> swParts = new List<IPartDoc>();
