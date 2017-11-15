@@ -11,7 +11,8 @@ namespace SolidCompare
     {
         private static SldWorks.SldWorks instance;
         private static gtcocswUtilities swUtil;
-        private static string swPath = @"C:\Program Files\SOLIDWORKS Corp\SOLIDWORKS\SLDWORKS.exe";  // Change this to your SolidWorks Directory
+        static string programFile = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles);
+        private static string swPath =  programFile + @"\SOLIDWORKS Corp\SOLIDWORKS\SLDWORKS.exe";  // Change this to your SolidWorks Directory
 
         public static SldWorks.SldWorks Instance
         {
@@ -30,7 +31,8 @@ namespace SolidCompare
                     catch
                     {
                         Logger.Warn("Solidworks does not seem to be running, attempting to start SolidWorks...");
-                        Process.Start(swPath);
+                        try { Process.Start(swPath); }
+                        catch { Logger.Error("SwApp", "'Instance - Get'", "SolidWorks Path incorrect" + swPath); }
                         Logger.Info("Start command issued...");
 
                         do
