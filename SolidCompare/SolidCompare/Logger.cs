@@ -31,9 +31,8 @@ namespace SolidCompare
             IntPtr stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
             SafeFileHandle safeFileHandle = new SafeFileHandle(stdHandle, true);
             FileStream fileStream = new FileStream(safeFileHandle, FileAccess.Write);
-            Encoding encoding = System.Text.Encoding.GetEncoding(MY_CODE_PAGE);
-            StreamWriter standardOutput = new StreamWriter(fileStream, encoding);
-            standardOutput.AutoFlush = true;
+            Encoding encoding = Encoding.GetEncoding(MY_CODE_PAGE);
+            StreamWriter standardOutput = new StreamWriter(fileStream, encoding){AutoFlush = true};
             Console.SetOut(standardOutput);
 
             Console.WriteLine("[INFO] " + message);
@@ -41,11 +40,27 @@ namespace SolidCompare
 
         public static void Warn(string message)
         {
+            AllocConsole();
+            IntPtr stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+            SafeFileHandle safeFileHandle = new SafeFileHandle(stdHandle, true);
+            FileStream fileStream = new FileStream(safeFileHandle, FileAccess.Write);
+            Encoding encoding = Encoding.GetEncoding(MY_CODE_PAGE);
+            StreamWriter standardOutput = new StreamWriter(fileStream, encoding) { AutoFlush = true };
+            Console.SetOut(standardOutput);
+
             Console.WriteLine("[WARNING] " + message);
         }
 
         public static void Error(string className, string methodName, string message)
         {
+            AllocConsole();
+            IntPtr stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+            SafeFileHandle safeFileHandle = new SafeFileHandle(stdHandle, true);
+            FileStream fileStream = new FileStream(safeFileHandle, FileAccess.Write);
+            Encoding encoding = Encoding.GetEncoding(MY_CODE_PAGE);
+            StreamWriter standardOutput = new StreamWriter(fileStream, encoding) { AutoFlush = true };
+            Console.SetOut(standardOutput);
+
             Console.WriteLine("[ERROR] " + message + " in method: " + methodName + " of class: " + className);
         }
     }
