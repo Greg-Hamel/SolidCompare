@@ -61,7 +61,10 @@ namespace SolidCompare
             StreamWriter standardOutput = new StreamWriter(fileStream, encoding) { AutoFlush = true };
             Console.SetOut(standardOutput);
 
-            Console.WriteLine("[ERROR] " + message + " in method: " + methodName + " of class: " + className);
+            Console.WriteLine("[ERROR] '" + message + "' in method: " + methodName + " of class: " + className);
+            Console.WriteLine("Shutting down...");
+            Console.Read();
+            Environment.Exit(1);
         }
     }
 }
