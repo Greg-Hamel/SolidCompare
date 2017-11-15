@@ -25,18 +25,74 @@ namespace SolidCompare
         {
             IFeature swFeature = ((IModelDoc2)this.swAssembly).FirstFeature();
 
-            while ((swFeature != null))
+            while (swFeature != null)
             {
-                Console.WriteLine("++++ TypeName: " + swFeature.GetSpecificFeature2() + " - Typename2: " + swFeature.GetTypeName2()
-                    + " - Name: " + swFeature.Name);
+                var swEntity = (IEntity)swFeature;
+                var swEntityType = (swSelectType_e)swEntity.GetType();
+                var featureTypeName = swFeature.GetTypeName2();
+                var featureDefinition = swFeature.GetDefinition();
+                var specificFeature = swFeature.GetSpecificFeature2();
+                
+                if (swSelectType_e.swSelBODYFEATURES == swEntityType)
+                {
+                    swBodyFeatures.Add(swFeature); // swFeature.GetDefinition()
+                }
+
+                if (swSelectType_e.swSelMATEGROUPS == swEntityType)
+                {
+                    //Get first mate, which is a subfeature
+                    IFeature swMate = (Feature)swFeature.GetFirstSubFeature();
+                    while (null != swMate)
+                    {
+                        swMates.Add(swMate.GetSpecificFeature2());
+                        swMate = swMate.GetNextSubFeature();
+                    }
+                }
+
+                if (swSelectType_e.swSelCOMPONENTS == swEntityType)
+                {                   
+                    var swModelDoc = ((IComponent2)swFeature.GetSpecificFeature2()).GetModelDoc2();
+
+                    if (swModelDoc is IAssemblyDoc)
+                    {
+                        swSubAssemblies.Add((IAssemblyDoc)swModelDoc);
+                    }
+
+                    if (swModelDoc is IPartDoc)
+                    {
+                        swParts.Add((IPartDoc)swModelDoc);
+                    }
+                }
+
                 swFeature = swFeature.GetNextFeature();
             }
         }
 
         // Return all parts without suppressed
-        public List<Object> GetComponents()
+        /*public List<Object> GetComponents()
         {
             return new List<Object>((Object[])swAssembly.GetComponents(false));
+        }
+        */
+
+        public List<IAssemblyDoc> GetSubAssemblies()
+        {
+            return swSubAssemblies;
+        }
+
+        public List<IPartDoc> GetParts()
+        {
+            return swParts;
+        }
+
+        public List<IMate2> GetMates()
+        {
+            return swMates;
+        }
+
+        public List<IFeature> GetBodyFeatures()
+        {
+            return swBodyFeatures;
         }
 
         // Return the assembly's directory
