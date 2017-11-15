@@ -13,20 +13,17 @@ namespace SolidCompare
 {
     public class VolumeComparator
     {
-        static string path1, path2;
         static AssemblyDoc swAsbly;
         static Component2 swComp;
         static SldWorks.SldWorks swApp = Program.swApp;
 
-        public VolumeComparator()
-        {
+        private object component1;
+        private object component2;
 
-        }
-
-        public VolumeComparator(string componentPath1, string componentPath2)
+        public VolumeComparator(object component1, object component2)
         {
-            path1 = componentPath1;
-            path2 = componentPath2;
+            this.component1 = component1;
+            this.component2 = component2;
         }
 
         static bool CreateAssembly()
