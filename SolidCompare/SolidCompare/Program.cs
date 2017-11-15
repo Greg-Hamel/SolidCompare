@@ -12,9 +12,6 @@ namespace SolidCompare
 {
     static class Program
     {
-        /// <summary>
-        /// Point d'entrée principal de l'application.
-        /// </summary>
 
         static void Main()
         {
@@ -27,8 +24,7 @@ namespace SolidCompare
 
             string dir1 = lcher.directory1;
             string dir2 = lcher.directory2;
-            Debug.WriteLine("test: {0}", dir1, null);
-            Debug.WriteLine("test: {0}", dir2, null);
+
 
             MessageBox.Show("Done");
 

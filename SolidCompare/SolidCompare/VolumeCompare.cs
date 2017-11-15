@@ -13,7 +13,6 @@ namespace SolidCompare
 {
     public class VolumeCompare
     {
-        public string dir1, dir2;
 
         public VolumeCompare()
         {
