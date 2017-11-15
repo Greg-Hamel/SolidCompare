@@ -50,7 +50,7 @@
     <Compile Include="AssemblyComparator.cs" />
     <Compile Include="BodyFeatureComparator.cs" />
     <Compile Include="Component.cs" />
-    <Compile Include="VolumeCompare.cs" />
+    <Compile Include="VolumeComparator.cs" />
     <Compile Include="FeatureComparator.cs" />
     <Compile Include="Launcher.cs">
       <SubType>Form</SubType>
