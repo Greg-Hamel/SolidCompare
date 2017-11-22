@@ -51,7 +51,7 @@ namespace SolidCompare
                             }
                         } while (starting);
                     }
-                    Logger.Info("Handshaking with SolidWorks");
+                    Logger.Info("Handshaking with SolidWorks...");
                     instance = new SldWorks.SldWorks();
                     Logger.Info("SolidWorks handshake completed");
                 }
