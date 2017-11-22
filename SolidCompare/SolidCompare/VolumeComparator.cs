@@ -91,6 +91,12 @@ namespace SolidCompare
              *  assembly and mate them so their origins are aligned   */
 
             ModelDoc2 swModel = (ModelDoc2)swAsbly;
+            ModelDocExtension swDocExt = swModel.Extension;
+
+            int MateError;
+            string MateName;
+            string FirstSelection;
+            string SecondSelection;
 
             // Add Component1 *TBD*
             Logger.Info("Adding first component to assembly...");
@@ -128,18 +134,15 @@ namespace SolidCompare
 
             swModel.ClearSelection();
 
-            ModelDocExtension swDocExt = swModel.Extension;
-
-            string MateName = "Aligned_Origins";
-            string FirstSelection = "Point1@Origin@" + Comp1Name + "@" + swModel.GetTitle();
-            string SecondSelection = "Point1@Origin@" + Comp2Name + "@" + swModel.GetTitle();
+            MateName = "Aligned_Origins";
+            FirstSelection = "Point1@Origin@" + Comp1Name + "@" + swModel.GetTitle();
+            SecondSelection = "Point1@Origin@" + Comp2Name + "@" + swModel.GetTitle();
 
             boolstat = swDocExt.SelectByID2(FirstSelection, "EXTSKETCHPOINT", 0, 0, 0, false, 1, null, 0);
-            MessageBox.Show("1");
             boolstat = swDocExt.SelectByID2(SecondSelection, "EXTSKETCHPOINT", 0, 0, 0, true, 1, null, 0);
 
             MateFeature = (Feature)swAsbly.AddMate5((int)swMateType_e.swMateCOINCIDENT, (int)swMateAlign_e.swMateAlignALIGNED,
-                false, 0, 0, 0, 0, 0, 0, 0, 0, false, false, (int)swMateWidthOptions_e.swMateWidth_Centered, out int MateError);
+                false, 0, 0, 0, 0, 0, 0, 0, 0, false, false, (int)swMateWidthOptions_e.swMateWidth_Centered, out MateError);
             if (MateError != 1)
             {
                 Logger.Error("VolumeComparator", "InsertComponent", "swAddMateError: "+MateError);
@@ -148,16 +151,56 @@ namespace SolidCompare
 
             swModel.ClearSelection();
             Logger.Info("Mate added: " + MateFeature.Name);
-        }
 
-        static void MateComponents()
-        {
+            Logger.Info("Adding Top Plane Mate...");
+
+            swModel.ClearSelection();
+
+            MateName = "Aligned_Top";
+            FirstSelection = "Top@" + Comp1Name + "@" + swModel.GetTitle();
+            SecondSelection = "Top@" + Comp2Name + "@" + swModel.GetTitle();
+
+            boolstat = swDocExt.SelectByID2(FirstSelection, "PLANE", 0, 0, 0, false, 1, null, 0);
+            boolstat = swDocExt.SelectByID2(SecondSelection, "PLANE", 0, 0, 0, true, 1, null, 0);
+
+            MateFeature = (Feature)swAsbly.AddMate5((int)swMateType_e.swMateCOINCIDENT, (int)swMateAlign_e.swMateAlignALIGNED,
+                false, 0, 0, 0, 0, 0, 0, 0, 0, false, false, (int)swMateWidthOptions_e.swMateWidth_Centered, out MateError);
+            if (MateError != 1)
+            {
+                Logger.Error("VolumeComparator", "InsertComponent", "swAddMateError: " + MateError);
+            }
+            MateFeature.Name = MateName;
+
+            swModel.ClearSelection();
+            Logger.Info("Mate added: " + MateFeature.Name);
+
+            Logger.Info("Adding Front Plane Mate...");
+
+            swModel.ClearSelection();
+
+            MateName = "Aligned_Front";
+            FirstSelection = "Front@" + Comp1Name + "@" + swModel.GetTitle();
+            SecondSelection = "Front@" + Comp2Name + "@" + swModel.GetTitle();
+
+            boolstat = swDocExt.SelectByID2(FirstSelection, "PLANE", 0, 0, 0, false, 1, null, 0);
+            boolstat = swDocExt.SelectByID2(SecondSelection, "PLANE", 0, 0, 0, true, 1, null, 0);
+
+            MateFeature = (Feature)swAsbly.AddMate5((int)swMateType_e.swMateCOINCIDENT, (int)swMateAlign_e.swMateAlignALIGNED,
+                false, 0, 0, 0, 0, 0, 0, 0, 0, false, false, (int)swMateWidthOptions_e.swMateWidth_Centered, out MateError);
+            if (MateError != 1)
+            {
+                Logger.Error("VolumeComparator", "InsertComponent", "swAddMateError: " + MateError);
+            }
+            MateFeature.Name = MateName;
+
+            swModel.ClearSelection();
+            Logger.Info("Mate added: " + MateFeature.Name);
 
         }
 
         static void SaveAsPart()
         {
-
+            
         }
 
         static double SubstractVolumeAB()
