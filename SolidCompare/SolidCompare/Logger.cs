@@ -42,7 +42,9 @@ namespace SolidCompare
             AllocateConsole()
             #endif
 
-            Console.WriteLine("[INFO] " + message);
+            
+
+            Console.WriteLine("[INFO]    " + DateTime.Now.ToString("h:mm:ss tt") + "    " + message);
         }
 
         public static void Warn(string message)
@@ -51,7 +53,7 @@ namespace SolidCompare
             AllocateConsole()
             #endif
 
-            Console.WriteLine("[WARNING] " + message);
+            Console.WriteLine( "[WARNING] " + DateTime.Now.ToString("h:mm:ss tt") + "    " + message);
         }
 
         public static void Error(string className, string methodName, string message)
@@ -60,7 +62,7 @@ namespace SolidCompare
             AllocateConsole()
             #endif
 
-            Console.WriteLine("[ERROR] '" + message + "' in method: " + methodName + " of class: " + className);
+            Console.WriteLine("[ERROR]   '" + DateTime.Now.ToString("h:mm:ss tt") + "    " + message + "' in method: " + methodName + " of class: " + className);
             Console.WriteLine("Shutting down...");
             Console.Read();
             Environment.Exit(1);
