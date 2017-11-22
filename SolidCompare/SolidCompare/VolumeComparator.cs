@@ -14,12 +14,15 @@ namespace SolidCompare
     public class VolumeComparator
     {
         static AssemblyDoc swAsbly;
-        static Component2 swComp;
+        static Component2 swComp1, swComp2;
         static SldWorks.SldWorks swApp = Program.swApp;
+        static Feature MateFeature;
         static string programFile = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles);
 
         static ModelDoc2 component1;
         static ModelDoc2 component2;
+
+        static bool boolstat;
 
         public VolumeComparator()
         {
@@ -34,6 +37,7 @@ namespace SolidCompare
             
             CheckComponents();
             CreateAssembly();
+            InsertComponents();
         }
 
         static bool CreateAssembly()
@@ -81,39 +85,73 @@ namespace SolidCompare
             }
         }
 
-        static bool InsertComponents()
+        static void InsertComponents()
         {
-            /* This will insert the components into 
-             * the newly created assembly */
+            /* This will insert the components into the newly created
+             *  assembly and mate them so their origins are aligned   */
+
+            ModelDoc2 swModel = (ModelDoc2)swAsbly;
 
             // Add Component1 *TBD*
-            swComp = swAsbly.AddComponent5(path, (int)swAddComponentConfigOptions_e.swAddComponentConfigOptions_CurrentSelectedConfig, "", false, "", 0, 0, 0);
+            Logger.Info("Adding first component to assembly...");
+            swComp1 = swAsbly.AddComponent5(component1.GetPathName(), (int)swAddComponentConfigOptions_e.swAddComponentConfigOptions_CurrentSelectedConfig, "",
+                false, "", 0, 0, 0);
 
-            if (swComp == null)
+            string Comp1Name = swComp1.Name2;
+
+            if (swComp1 == null)
             {
                 Logger.Warn("Component addition was unsuccessful.");
-                return false;
             }
             else
             {
-                Logger.Info("Component added.");
-                return true;
+                Logger.Info("Component added successfully.");
             }
 
             // Add Component2 *TBD*
-            swComp = swAsbly.AddComponent5(path, (int)swAddComponentConfigOptions_e.swAddComponentConfigOptions_CurrentSelectedConfig, "", false, "", 0, 0, 0);
+            Logger.Info("Adding second component to assembly...");
+            swComp2 = swAsbly.AddComponent5(component2.GetPathName(), (int)swAddComponentConfigOptions_e.swAddComponentConfigOptions_CurrentSelectedConfig, "",
+                false, "", 0, 0, 0);
 
-            if (swComp == null)
+            string Comp2Name = swComp2.Name2;
+
+            if (swComp2 == null)
             {
                 Logger.Warn("Component addition was unsuccessful.");
-                return false;
             }
             else
             {
-                Logger.Info("Component added.");
-                return true;
+                Logger.Info("Component added successfully.");
             }
 
+            Logger.Info("Adding Origin Mate...");
+
+            swModel.ClearSelection();
+
+            ModelDocExtension swDocExt = swModel.Extension;
+
+            string MateName = "Aligned_Origins";
+            string FirstSelection = "Point1@Origin@" + Comp1Name + "@" + swModel.GetTitle();
+            string SecondSelection = "Point1@Origin@" + Comp2Name + "@" + swModel.GetTitle();
+
+            boolstat = swDocExt.SelectByID2(FirstSelection, "EXTSKETCHPOINT", 0, 0, 0, false, 1, null, 0);
+            MessageBox.Show("1");
+            boolstat = swDocExt.SelectByID2(SecondSelection, "EXTSKETCHPOINT", 0, 0, 0, true, 1, null, 0);
+
+            MateFeature = (Feature)swAsbly.AddMate5((int)swMateType_e.swMateCOINCIDENT, (int)swMateAlign_e.swMateAlignALIGNED,
+                false, 0, 0, 0, 0, 0, 0, 0, 0, false, false, (int)swMateWidthOptions_e.swMateWidth_Centered, out int MateError);
+            if (MateError != 1)
+            {
+                Logger.Error("VolumeComparator", "InsertComponent", "swAddMateError: "+MateError);
+            }
+            MateFeature.Name = MateName;
+
+            swModel.ClearSelection();
+            Logger.Info("Mate added: " + MateFeature.Name);
+        }
+
+        static void MateComponents()
+        {
 
         }
 
