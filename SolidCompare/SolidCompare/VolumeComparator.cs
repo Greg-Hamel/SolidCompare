@@ -21,20 +21,27 @@ namespace SolidCompare
         static ModelDoc2 component1;
         static ModelDoc2 component2;
 
-        public VolumeComparator(ModelDoc2 comparer, ModelDoc2 comparee)
+        public VolumeComparator()
         {
-            component1 = comparer;
-            component2 = comparee;
+
         }
 
-        public void Compare()
+        public static void Compare(ModelDoc2 comparer, ModelDoc2 comparee)
         {
             // This is the main method to execute the rest of the comparison.
+            component1 = comparer;
+            component2 = comparee;
+            
+            CheckComponents();
+            CreateAssembly();
         }
 
         static bool CreateAssembly()
         {
+            Logger.Info("Creating the assembly...");
             swAsbly = (AssemblyDoc)swApp.NewDocument(programFile + @"\SOLIDWORKS Corp\SOLIDWORKS\data\templates\assem.asmdot", 0, 0, 0);
+
+            string AsblyTitle = ((ModelDoc2)swAsbly).GetTitle();
 
             if (swAsbly == null)
             {
@@ -49,18 +56,16 @@ namespace SolidCompare
 
         }
 
-        static bool InsertComponent(string path)
+        static void CheckComponents()
         {
-            /* This will insert the componant into 
-             * the newly created assembly */
-
+            Logger.Info("Components are being verified...");
             if (component1.GetType() == (int)swDocumentTypes_e.swDocASSEMBLY || component2.GetType() == (int)swDocumentTypes_e.swDocASSEMBLY)
             {
-                Logger.Info("Components are of Assembly Type");
+                Logger.Info("Components are both of Assembly Type");
             }
             else if (component1.GetType() == (int)swDocumentTypes_e.swDocPART || component2.GetType() == (int)swDocumentTypes_e.swDocPART)
             {
-                Logger.Info("Components are of Part Type");
+                Logger.Info("Components are both of Part Type");
             }
             else if (component1.GetType() == (int)swDocumentTypes_e.swDocDRAWING || component2.GetType() == (int)swDocumentTypes_e.swDocDRAWING)
             {
@@ -70,10 +75,19 @@ namespace SolidCompare
             {
                 Logger.Error("VolumeComparator", "InsertComponent", "Two different type of document are provided.");
             }
+            else
+            {
+                Logger.Error("VolumeComparator", "InsertComponent", "Unexpected condition was met.");
+            }
+        }
 
+        static bool InsertComponents()
+        {
+            /* This will insert the components into 
+             * the newly created assembly */
 
-            // ModelDoc2 tmpComponent = (ModelDoc2)swApp.OpenDoc7();
-            swComp = (Component2)swAsbly.AddComponent5(path, (int)swAddComponentConfigOptions_e.swAddComponentConfigOptions_CurrentSelectedConfig, "", false, "", 0, 0, 0);
+            // Add Component1 *TBD*
+            swComp = swAsbly.AddComponent5(path, (int)swAddComponentConfigOptions_e.swAddComponentConfigOptions_CurrentSelectedConfig, "", false, "", 0, 0, 0);
 
             if (swComp == null)
             {
@@ -85,6 +99,22 @@ namespace SolidCompare
                 Logger.Info("Component added.");
                 return true;
             }
+
+            // Add Component2 *TBD*
+            swComp = swAsbly.AddComponent5(path, (int)swAddComponentConfigOptions_e.swAddComponentConfigOptions_CurrentSelectedConfig, "", false, "", 0, 0, 0);
+
+            if (swComp == null)
+            {
+                Logger.Warn("Component addition was unsuccessful.");
+                return false;
+            }
+            else
+            {
+                Logger.Info("Component added.");
+                return true;
+            }
+
+
         }
 
         static void SaveAsPart()

@@ -120,13 +120,13 @@ namespace SolidCompare
             return (gtcocswCompareGeometry)GetSwToolInterface(gtSwTools_e.gtSwToolGeomDiff);
         }
 
-        public static object OpenDocument(string fileName)
+        public static ModelDoc2 OpenFile(string fileName)
         {
             /* Returns the file's IPartDoc, IAssemblyDoc or
              * IModelDoc2 if it is a part, assembly or 
              * anything else that can be loaded. */
 
-            IModelDoc2 swModel = default(ModelDoc2);
+            ModelDoc2 swModel = default(ModelDoc2);
             IDocumentSpecification swDocSpecification = default(DocumentSpecification);
             int errors = 0;
             int warnings = 0;
@@ -160,18 +160,8 @@ namespace SolidCompare
                 Logger.Warn("Opening Assembly warning: " + warnings);
             }
 
-            if (swDocSpecification.DocumentType == (int)swDocumentTypes_e.swDocASSEMBLY)
-            {
-                return (IAssemblyDoc)swModel;
-            }
-            else if (swDocSpecification.DocumentType == (int)swDocumentTypes_e.swDocPART)
-            {
-                return (IPartDoc)swModel;
-            }
-            else
-            {
-                return swModel;  // Returns the IModelDoc2 if the type is not one of the above.
-            }
+            
+            return swModel;  // Returns the IModelDoc2
         }
     }
 }
