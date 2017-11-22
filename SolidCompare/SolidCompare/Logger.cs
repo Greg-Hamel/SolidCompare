@@ -25,6 +25,9 @@ namespace SolidCompare
         private const int STD_OUTPUT_HANDLE = -11;
         private const int MY_CODE_PAGE = 437;
 
+        static int WarnNumber = 0;
+        static int ErrorNumber = 0;
+
         static void AllocateConsole()
         {
             AllocConsole();
@@ -42,8 +45,6 @@ namespace SolidCompare
             AllocateConsole()
             #endif
 
-            
-
             Console.WriteLine("[INFO]    " + DateTime.Now.ToString("h:mm:ss tt") + "    " + message);
         }
 
@@ -54,6 +55,7 @@ namespace SolidCompare
             #endif
 
             Console.WriteLine( "[WARNING] " + DateTime.Now.ToString("h:mm:ss tt") + "    " + message);
+            WarnNumber += 1;
         }
 
         public static void Error(string className, string methodName, string message)
@@ -63,9 +65,17 @@ namespace SolidCompare
             #endif
 
             Console.WriteLine("[ERROR]   '" + DateTime.Now.ToString("h:mm:ss tt") + "    " + message + "' in method: " + methodName + " of class: " + className);
+            ErrorNumber += 1;
+
             Console.WriteLine("Shutting down...");
             Console.Read();
             Environment.Exit(1);
+        }
+
+        public static void EndReport()
+        {
+            Info("The current program concluded with the following: \n\t\t\t\t\t\t\t\t" 
+                + WarnNumber + " Warnings\n\t\t\t\t\t\t\t\t" + ErrorNumber + " Errors");
         }
     }
 }
