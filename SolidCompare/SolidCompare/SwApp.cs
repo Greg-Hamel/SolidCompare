@@ -120,8 +120,12 @@ namespace SolidCompare
             return (gtcocswCompareGeometry)GetSwToolInterface(gtSwTools_e.gtSwToolGeomDiff);
         }
 
-        public static IAssemblyDoc OpenAssembly(string fileName)
+        public static object OpenDocument(string fileName)
         {
+            /* Returns the file's IPartDoc, IAssemblyDoc or
+             * IModelDoc2 if it is a part, assembly or 
+             * anything else that can be loaded. */
+
             IModelDoc2 swModel = default(ModelDoc2);
             IDocumentSpecification swDocSpecification = default(DocumentSpecification);
             int errors = 0;
@@ -131,8 +135,9 @@ namespace SolidCompare
 
             // Set the specifications
             swDocSpecification = (IDocumentSpecification)instance.GetOpenDocSpec(fileName);
+            Logger.Info("The Document is a " + (swDocumentTypes_e)swDocSpecification.DocumentType);
             swDocSpecification.Selective = false;
-            swDocSpecification.DocumentType = (int)swDocumentTypes_e.swDocASSEMBLY;
+            // swDocSpecification.DocumentType = (int)swDocumentTypes_e.swDocASSEMBLY;
             // swDocSpecification.DisplayState = "Default_Display State-1";
             swDocSpecification.UseLightWeightDefault = false;
             swDocSpecification.LightWeight = false;
@@ -155,7 +160,18 @@ namespace SolidCompare
                 Logger.Warn("Opening Assembly warning: " + warnings);
             }
 
-            return (IAssemblyDoc)swModel;
+            if (swDocSpecification.DocumentType == (int)swDocumentTypes_e.swDocASSEMBLY)
+            {
+                return (IAssemblyDoc)swModel;
+            }
+            else if (swDocSpecification.DocumentType == (int)swDocumentTypes_e.swDocPART)
+            {
+                return (IPartDoc)swModel;
+            }
+            else
+            {
+                return swModel;  // Returns the IModelDoc2 if the type is not one of the above.
+            }
         }
     }
 }
