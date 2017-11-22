@@ -25,44 +25,40 @@ namespace SolidCompare
         private const int STD_OUTPUT_HANDLE = -11;
         private const int MY_CODE_PAGE = 437;
 
-        public static void Info(string message)
+        static void AllocateConsole()
         {
-            #if ! DEBUG
             AllocConsole();
-            #endif
-
             IntPtr stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
             SafeFileHandle safeFileHandle = new SafeFileHandle(stdHandle, true);
             FileStream fileStream = new FileStream(safeFileHandle, FileAccess.Write);
             Encoding encoding = Encoding.GetEncoding(MY_CODE_PAGE);
-            StreamWriter standardOutput = new StreamWriter(fileStream, encoding){AutoFlush = true};
+            StreamWriter standardOutput = new StreamWriter(fileStream, encoding) { AutoFlush = true };
             Console.SetOut(standardOutput);
+        }
+
+        public static void Info(string message)
+        {
+            #if !DEBUG
+            AllocateConsole()
+            #endif
 
             Console.WriteLine("[INFO] " + message);
         }
 
         public static void Warn(string message)
         {
-            AllocConsole();
-            IntPtr stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-            SafeFileHandle safeFileHandle = new SafeFileHandle(stdHandle, true);
-            FileStream fileStream = new FileStream(safeFileHandle, FileAccess.Write);
-            Encoding encoding = Encoding.GetEncoding(MY_CODE_PAGE);
-            StreamWriter standardOutput = new StreamWriter(fileStream, encoding) { AutoFlush = true };
-            Console.SetOut(standardOutput);
+            #if !DEBUG
+            AllocateConsole()
+            #endif
 
             Console.WriteLine("[WARNING] " + message);
         }
 
         public static void Error(string className, string methodName, string message)
         {
-            AllocConsole();
-            IntPtr stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-            SafeFileHandle safeFileHandle = new SafeFileHandle(stdHandle, true);
-            FileStream fileStream = new FileStream(safeFileHandle, FileAccess.Write);
-            Encoding encoding = Encoding.GetEncoding(MY_CODE_PAGE);
-            StreamWriter standardOutput = new StreamWriter(fileStream, encoding) { AutoFlush = true };
-            Console.SetOut(standardOutput);
+            #if !DEBUG
+            AllocateConsole()
+            #endif
 
             Console.WriteLine("[ERROR] '" + message + "' in method: " + methodName + " of class: " + className);
             Console.WriteLine("Shutting down...");
