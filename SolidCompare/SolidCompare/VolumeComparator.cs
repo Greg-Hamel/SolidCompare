@@ -23,6 +23,10 @@ namespace SolidCompare
         static ModelDoc2 component2;
 
         static bool boolstat;
+        static string ComponentPath;
+        static string ComponentFolder;
+        static string Comp1Name, Comp2Name;
+        static string comparePartName;
 
         public VolumeComparator()
         {
@@ -32,12 +36,37 @@ namespace SolidCompare
         public static void Compare(ModelDoc2 comparer, ModelDoc2 comparee)
         {
             // This is the main method to execute the rest of the comparison.
+            
+
             component1 = comparer;
             component2 = comparee;
-            
+
+            GetInfo();
             CheckComponents();
             CreateAssembly();
             InsertComponents();
+            SaveAsPart();
+        }
+
+        static void GetInfo()
+        {
+            string CompTitle;
+            string[] strings;
+            int index;
+
+            ComponentPath = component2.GetPathName();
+
+            CompTitle = component1.GetTitle();
+            strings = CompTitle.Split(new Char[] { '.' });
+            Comp1Name = strings[0];
+
+            CompTitle = component2.GetTitle();
+            strings = CompTitle.Split(new Char[] { '.' });
+            Comp2Name = strings[0];
+
+            index = ComponentPath.IndexOf(CompTitle);
+
+            ComponentFolder =  ComponentPath.Substring(0, (index));
         }
 
         static bool CreateAssembly()
@@ -98,7 +127,7 @@ namespace SolidCompare
             string FirstSelection;
             string SecondSelection;
 
-            // Add Component1 *TBD*
+            // Add Component1
             Logger.Info("Adding first component to assembly...");
             swComp1 = swAsbly.AddComponent5(component1.GetPathName(), (int)swAddComponentConfigOptions_e.swAddComponentConfigOptions_CurrentSelectedConfig, "",
                 false, "", 0, 0, 0);
@@ -114,7 +143,7 @@ namespace SolidCompare
                 Logger.Info("Component added successfully.");
             }
 
-            // Add Component2 *TBD*
+            // Add Component2
             Logger.Info("Adding second component to assembly...");
             swComp2 = swAsbly.AddComponent5(component2.GetPathName(), (int)swAddComponentConfigOptions_e.swAddComponentConfigOptions_CurrentSelectedConfig, "",
                 false, "", 0, 0, 0);
@@ -130,6 +159,8 @@ namespace SolidCompare
                 Logger.Info("Component added successfully.");
             }
 
+
+            // Add Mate 1
             Logger.Info("Adding Origin Mate...");
 
             swModel.ClearSelection();
@@ -152,6 +183,8 @@ namespace SolidCompare
             swModel.ClearSelection();
             Logger.Info("Mate added: " + MateFeature.Name);
 
+            // Add Mate 2
+
             Logger.Info("Adding Top Plane Mate...");
 
             swModel.ClearSelection();
@@ -173,6 +206,8 @@ namespace SolidCompare
 
             swModel.ClearSelection();
             Logger.Info("Mate added: " + MateFeature.Name);
+
+            // Add Mate 3
 
             Logger.Info("Adding Front Plane Mate...");
 
@@ -200,7 +235,21 @@ namespace SolidCompare
 
         static void SaveAsPart()
         {
-            
+            ModelDoc2 swModel = (ModelDoc2)swAsbly;
+            int errors = 0;
+            int warnings = 0;
+
+            comparePartName = ComponentFolder + "Compare_" + Comp1Name + "_&_" + Comp2Name + ".sldprt";
+
+            Logger.Info("Saving Assembly as '.SLDPRT'...");
+            swModel.SaveAs4(comparePartName, (int)swSaveAsVersion_e.swSaveAsCurrentVersion, (int)swSaveAsOptions_e.swSaveAsOptions_Silent, errors, warnings);
+
+            if (errors != 0) { Logger.Error("VolumeComparator", "SaveAsPart", "swSaveAsError: " + errors); }
+            else if (warnings != 0) { Logger.Warn("swFileSaveWarning: " + warnings); }
+            else
+            {
+                Logger.Info("Save successful.");
+            }
         }
 
         static double SubstractVolumeAB()
