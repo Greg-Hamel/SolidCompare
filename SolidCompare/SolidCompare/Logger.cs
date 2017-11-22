@@ -27,7 +27,10 @@ namespace SolidCompare
 
         public static void Info(string message)
         {
+            #if ! DEBUG
             AllocConsole();
+            #endif
+
             IntPtr stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
             SafeFileHandle safeFileHandle = new SafeFileHandle(stdHandle, true);
             FileStream fileStream = new FileStream(safeFileHandle, FileAccess.Write);
