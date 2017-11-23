@@ -20,7 +20,8 @@ namespace SolidCompare
         static ModelDoc2 component1;
         static ModelDoc2 component2;
 
-        static Body2[] bodies;
+        static object[] bodies;
+        static Body2 body1, body2;
 
         static bool boolstat;
         static string componentPath;
@@ -37,8 +38,6 @@ namespace SolidCompare
         public static void Compare(ModelDoc2 comparer, ModelDoc2 comparee)
         {
             // This is the main method to execute the rest of the comparison.
-            
-
             component1 = comparer;
             component2 = comparee;
 
@@ -51,7 +50,11 @@ namespace SolidCompare
 
             comparePart = SwApp.OpenFile(comparePartPath);
             bodies = ((PartDoc)comparePart).GetBodies2((int)swBodyType_e.swSolidBody, true);
-
+            body1 = (Body2)bodies[0];
+            body2 = (Body2)bodies[1];
+            Logger.Info("Volume Compare:\t" + CompareVolume());
+            Logger.Info("Area Compare:\t" + CompareArea());
+            Logger.Info("Faces Compare:\t" + CompareFaces());
             CreateConfigurations();
         }
 
@@ -312,20 +315,15 @@ namespace SolidCompare
             double[] body1MassProp, body2MassProp;
             double body1Volume, body2Volume;
 
-            body1MassProp = bodies[0].GetMassProperties(0);  // Using a densities of '0' since we don't need mass
-            body2MassProp = bodies[1].GetMassProperties(0);
+            body1MassProp = body1.GetMassProperties(0);  // Using a densities of '0' since we don't need mass
+            body2MassProp = body2.GetMassProperties(0);
 
-            body1Volume = body1MassProp[3];
-            body2Volume = body2MassProp[3];
+            body1Volume = Math.Round(body1MassProp[3], 8);
+            body2Volume = Math.Round(body2MassProp[3], 8);
 
-            if (body1Volume == body2Volume) { return 0; }
-            else if (body1Volume > body2Volume) { return 1; }
-            else if (body1Volume < body2Volume) { return 2; }
-            else
-            {
-                Logger.Error("VolumeComparator", "CompareVolume()", "Unknown case has happened...");
-                return -1;
-            }
+            Logger.Info("Volume A:" + body1Volume + "\tVolume B:" + body2Volume);
+
+            return IncDecDoubleReport(body1Volume, body2Volume, "CompareVolume()");
         }
 
         static int CompareFaces()
@@ -336,17 +334,13 @@ namespace SolidCompare
 
             int body1Faces, body2Faces;
 
-            body1Faces = bodies[0].GetFaceCount();
-            body2Faces = bodies[1].GetFaceCount();
+            body1Faces = body1.GetFaceCount();
+            body2Faces = body2.GetFaceCount();
 
-            if (body1Faces == body2Faces) { return 0; }
-            else if (body1Faces > body2Faces) { return 1; }
-            else if (body1Faces < body2Faces) { return 2; }
-            else
-            {
-                Logger.Error("VolumeComparator", "CompareFaces()", "Unknown case has happened...");
-                return -1;
-            }
+
+            Logger.Info("Faces A:" + body1Faces + "\tFaces B:" + body2Faces);
+
+            return IncDecIntReport(body1Faces, body2Faces, "CompareFaces()");
         }
 
         static int CompareArea()
@@ -355,11 +349,12 @@ namespace SolidCompare
              * returns 1 for negative change
              * returns 2 for positive change */
 
-            Face2[] body1Faces, body2Faces;
+            object[] body1Faces, body2Faces;
             double body1Area, body2Area;
 
-            body1Faces = bodies[0].GetFaces();
-            body2Faces = bodies[1].GetFaces();
+
+            body1Faces = body1.GetFaces();
+            body2Faces = body2.GetFaces();
 
             body1Area = 0;
             foreach (Face2 face in body1Faces)
@@ -373,15 +368,33 @@ namespace SolidCompare
                 body2Area += face.GetArea();
             }
 
-            body1Area = Math.Round(body1Area, 4);
-            body2Area = Math.Round(body2Area, 4);
+            body1Area = Math.Round(body1Area, 8);
+            body2Area = Math.Round(body2Area, 8);
 
-            if (body1Area == body2Area) { return 0; }
-            else if (body1Area > body2Area) { return 1; }
-            else if (body1Area < body2Area) { return 2; }
+            Logger.Info("Area A:" + body1Area + "\tArea B:" + body2Area);
+
+            return IncDecDoubleReport(body1Area, body2Area, "CompareArea()");
+        }
+        static int IncDecDoubleReport(double number1, double number2, string methodname)
+        {
+            if (number1 == number2) { return 0; }
+            else if (number1 > number2) { return 1; }
+            else if (number1 < number2) { return 2; }
             else
             {
-                Logger.Error("VolumeComparator", "CompareSurface()", "Unknown case has happened...");
+                Logger.Error("VolumeComparator", methodname, "Unknown case has happened...");
+                return -1;
+            }
+        }
+
+        static int IncDecIntReport(int number1, int number2, string methodname)
+        {
+            if (number1 == number2) { return 0; }
+            else if (number1 > number2) { return 1; }
+            else if (number1 < number2) { return 2; }
+            else
+            {
+                Logger.Error("VolumeComparator", methodname, "Unknown case has happened...");
                 return -1;
             }
         }
