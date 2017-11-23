@@ -161,7 +161,14 @@ namespace SolidCompare
             if (warnings != 0)
             {
                 // See swFileLoadWarning_e for warning codes
-                Logger.Warn("Opening File warning: " + warnings);
+                if (warnings == 128)
+                {
+                    Logger.Info("The file is already open.");
+                }
+                else
+                {
+                    Logger.Warn("Opening File warning: " + warnings);
+                }
             }
 
             
