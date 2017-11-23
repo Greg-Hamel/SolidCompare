@@ -30,6 +30,17 @@ namespace SolidCompare
             string dir2 = lcher.directory2;
 
             swApp = SwApp.Instance;  // Get SolidWorks
+
+            // The following is used for testing of this branch only.
+
+            ModelDoc2 Part1 = SwApp.OpenFile(@"C:\Users\hameg\Documents\SWs\A.SLDPRT");
+            ModelDoc2 Part2 = SwApp.OpenFile(@"C:\Users\hameg\Documents\SWs\B.SLDPRT");
+
+            VolumeComparator.Compare(Part1, Part2);
+
+
+            Logger.EndReport();
+            MessageBox.Show("Done");
         }
 
     }
