@@ -42,7 +42,7 @@ namespace SolidCompare
         public static void Info(string message)
         {
             #if !DEBUG
-            AllocateConsole()
+            AllocateConsole();
             #endif
 
             Console.WriteLine("[INFO]    " + DateTime.Now.ToString("h:mm:ss tt") + "    " + message);
@@ -51,7 +51,7 @@ namespace SolidCompare
         public static void Warn(string message)
         {
             #if !DEBUG
-            AllocateConsole()
+            AllocateConsole();
             #endif
 
             Console.WriteLine( "[WARNING] " + DateTime.Now.ToString("h:mm:ss tt") + "    " + message);
@@ -61,7 +61,7 @@ namespace SolidCompare
         public static void Error(string className, string methodName, string message)
         {
             #if !DEBUG
-            AllocateConsole()
+            AllocateConsole();
             #endif
 
             Console.WriteLine("[ERROR]   '" + DateTime.Now.ToString("h:mm:ss tt") + "    " + message + "' in method: " + methodName + " of class: " + className);
