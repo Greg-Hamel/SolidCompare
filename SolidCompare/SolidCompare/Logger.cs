@@ -45,7 +45,8 @@ namespace SolidCompare
             AllocateConsole();
             #endif
 
-            Console.WriteLine("[INFO]    " + DateTime.Now.ToString("h:mm:ss tt") + "    " + message);
+            Colour("INFO");
+            Console.WriteLine("\t\t" + DateTime.Now.ToString("h:mm:ss tt") + "\t" + message);
         }
 
         public static void Warn(string message)
@@ -54,7 +55,8 @@ namespace SolidCompare
             AllocateConsole();
             #endif
 
-            Console.WriteLine( "[WARNING] " + DateTime.Now.ToString("h:mm:ss tt") + "    " + message);
+            Colour("WARNING");
+            Console.WriteLine("\t" + DateTime.Now.ToString("h:mm:ss tt") + "\t" + message);
             WarnNumber += 1;
         }
 
@@ -64,7 +66,8 @@ namespace SolidCompare
             AllocateConsole();
             #endif
 
-            Console.WriteLine("[ERROR]   '" + DateTime.Now.ToString("h:mm:ss tt") + "    " + message + "' in method: " + methodName + " of class: " + className);
+            Colour("ERROR");
+            Console.WriteLine("\t\t" + DateTime.Now.ToString("h:mm:ss tt") + "\t'" + message + "' in method: " + methodName + " of class: " + className);
             ErrorNumber += 1;
 
             Console.WriteLine("Shutting down...");
@@ -76,6 +79,33 @@ namespace SolidCompare
         {
             Info("The current program concluded with the following: \n\t\t\t\t\t\t\t\t" 
                 + WarnNumber + " Warnings\n\t\t\t\t\t\t\t\t" + ErrorNumber + " Errors");
+        }
+
+        static void Colour(string type)
+        {
+            Console.Write("[");
+            if (type == "INFO")
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write(type);
+            }
+            else if (type == "WARNING")
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write(type);
+            }
+            else if (type == "ERROR")
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write(type);
+            }
+            else
+            {
+                Console.Write(type);
+            }
+
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write("]");
         }
     }
 }
