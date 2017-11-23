@@ -133,12 +133,12 @@ namespace SolidCompare
             string nameOfFile;
 
             int index = fileName.LastIndexOf("\\");
-            nameOfFile = fileName.Substring(index);
+            nameOfFile = fileName.Substring(index+1);
             string methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
 
             // Set the specifications
             swDocSpecification = (IDocumentSpecification)instance.GetOpenDocSpec(fileName);
-            Logger.Info("The Document is a " + (swDocumentTypes_e)swDocSpecification.DocumentType);
+            Logger.Info("'" + nameOfFile + "' is a " + (swDocumentTypes_e)swDocSpecification.DocumentType);
             swDocSpecification.Selective = false;
             // swDocSpecification.DocumentType = (int)swDocumentTypes_e.swDocASSEMBLY;
             // swDocSpecification.DisplayState = "Default_Display State-1";
