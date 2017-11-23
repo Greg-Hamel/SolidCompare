@@ -30,9 +30,6 @@ namespace SolidCompare
             string dir2 = lcher.directory2;
 
             swApp = SwApp.Instance;  // Get SolidWorks
-
-            MessageBox.Show("Done");
-
         }
 
     }
