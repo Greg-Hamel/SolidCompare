@@ -14,11 +14,13 @@ namespace SolidCompare
         static SldWorks.SldWorks swApp = Program.swApp;
         static Feature mateFeature;
         static ModelDoc2 comparePart;
-
+        static Configuration config1, config2, config3;
         static string programFile = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles);
 
         static ModelDoc2 component1;
         static ModelDoc2 component2;
+
+        static Body2[] bodies;
 
         static bool boolstat;
         static string componentPath;
@@ -48,7 +50,9 @@ namespace SolidCompare
             ClosePreviouslyOpenedDocs();
 
             comparePart = SwApp.OpenFile(comparePartPath);
+            bodies = ((PartDoc)comparePart).GetBodies2((int)swBodyType_e.swSolidBody, true);
 
+            CreateConfigurations();
         }
 
         static void GetInfo()
@@ -267,7 +271,22 @@ namespace SolidCompare
 
         static void CreateConfigurations()
         {
+            Logger.Info("Creating three (3) configurations...");
+            config1 = comparePart.AddConfiguration3(comp1Name+"_minus_"+ comp2Name, 
+                "Substraction of body1 minus body2", "", (int)swConfigurationOptions2_e.swConfigOption_DontActivate);
+            config2 = comparePart.AddConfiguration3(comp2Name + "_minus_" + comp1Name,
+                "Substraction of body2 minus body1", "", (int)swConfigurationOptions2_e.swConfigOption_DontActivate);
+            config3 = comparePart.AddConfiguration3(comp1Name + "_and_" + comp2Name,
+                "Combination of body1 and body2", "", (int)swConfigurationOptions2_e.swConfigOption_DontActivate);
 
+            if (config1 != null || config2 != null | config3 != null)
+            {
+                Logger.Info("All configurations created successfully.");
+            }
+            else
+            {
+                Logger.Error("VolumeComparator", "CreateConfigurations()", "Something went wrong in the creation of the configurations.");
+            }
         }
 
         static double SubstractVolumeAB()
@@ -287,28 +306,84 @@ namespace SolidCompare
 
         static int CompareVolume()
         {
-
             /* returns 0 for no change in volume
              * returns 1 for negative change
              * returns 2 for positive change */
-            return 0;
+            double[] body1MassProp, body2MassProp;
+            double body1Volume, body2Volume;
+
+            body1MassProp = bodies[0].GetMassProperties(0);  // Using a densities of '0' since we don't need mass
+            body2MassProp = bodies[1].GetMassProperties(0);
+
+            body1Volume = body1MassProp[3];
+            body2Volume = body2MassProp[3];
+
+            if (body1Volume == body2Volume) { return 0; }
+            else if (body1Volume > body2Volume) { return 1; }
+            else if (body1Volume < body2Volume) { return 2; }
+            else
+            {
+                Logger.Error("VolumeComparator", "CompareVolume()", "Unknown case has happened...");
+                return -1;
+            }
         }
 
         static int CompareFaces()
         {
-
             /* returns 0 for no change in number of faces
              * returns 1 for negative change
              * returns 2 for positive change */
-            return 0;
+
+            int body1Faces, body2Faces;
+
+            body1Faces = bodies[0].GetFaceCount();
+            body2Faces = bodies[1].GetFaceCount();
+
+            if (body1Faces == body2Faces) { return 0; }
+            else if (body1Faces > body2Faces) { return 1; }
+            else if (body1Faces < body2Faces) { return 2; }
+            else
+            {
+                Logger.Error("VolumeComparator", "CompareFaces()", "Unknown case has happened...");
+                return -1;
+            }
         }
 
-        static int CompareSurface()
+        static int CompareArea()
         {
             /* returns 0 for no change in total surface
              * returns 1 for negative change
              * returns 2 for positive change */
-            return 0;
+
+            Face2[] body1Faces, body2Faces;
+            double body1Area, body2Area;
+
+            body1Faces = bodies[0].GetFaces();
+            body2Faces = bodies[1].GetFaces();
+
+            body1Area = 0;
+            foreach (Face2 face in body1Faces)
+            {
+                body1Area += face.GetArea();
+            }
+
+            body2Area = 0;
+            foreach (Face2 face in body2Faces)
+            {
+                body2Area += face.GetArea();
+            }
+
+            body1Area = Math.Round(body1Area, 4);
+            body2Area = Math.Round(body2Area, 4);
+
+            if (body1Area == body2Area) { return 0; }
+            else if (body1Area > body2Area) { return 1; }
+            else if (body1Area < body2Area) { return 2; }
+            else
+            {
+                Logger.Error("VolumeComparator", "CompareSurface()", "Unknown case has happened...");
+                return -1;
+            }
         }
     }
 }
