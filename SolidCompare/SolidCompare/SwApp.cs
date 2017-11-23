@@ -130,7 +130,10 @@ namespace SolidCompare
             IDocumentSpecification swDocSpecification = default(DocumentSpecification);
             int errors = 0;
             int warnings = 0;
+            string nameOfFile;
 
+            int index = fileName.LastIndexOf("\\");
+            nameOfFile = fileName.Substring(index);
             string methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
 
             // Set the specifications
@@ -145,6 +148,7 @@ namespace SolidCompare
             swDocSpecification.IgnoreHiddenComponents = true;
 
             // Open the assembly document as per the specifications
+            Logger.Info("Opening '" + nameOfFile + "'...");
             swModel = instance.OpenDoc7(swDocSpecification);
             errors = swDocSpecification.Error;
             warnings = swDocSpecification.Warning;
@@ -152,12 +156,12 @@ namespace SolidCompare
             if (errors != 0)
             {
                 // See swFileLoadError_e for error codes
-                Logger.Error(typeof(SwApp).FullName, methodName, "Failed to open Assembly. error: " + errors);
+                Logger.Error(typeof(SwApp).FullName, methodName, "Failed to open File. error: " + errors);
             }
             if (warnings != 0)
             {
                 // See swFileLoadWarning_e for warning codes
-                Logger.Warn("Opening Assembly warning: " + warnings);
+                Logger.Warn("Opening File warning: " + warnings);
             }
 
             
