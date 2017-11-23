@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using SldWorks;
 using SwConst;
-using System.Diagnostics;
 
 namespace SolidCompare
 {
@@ -78,10 +74,12 @@ namespace SolidCompare
 
         static bool CreateAssembly()
         {
+            string AsblyTitle;
+
             Logger.Info("Creating the assembly...");
             swAsbly = (AssemblyDoc)swApp.NewDocument(programFile + @"\SOLIDWORKS Corp\SOLIDWORKS\data\templates\assem.asmdot", 0, 0, 0);
 
-            string AsblyTitle = ((ModelDoc2)swAsbly).GetTitle();
+            AsblyTitle = ((ModelDoc2)swAsbly).GetTitle();
 
             if (swAsbly == null)
             {
@@ -261,6 +259,13 @@ namespace SolidCompare
         }
 
         static void ClosePreviouslyOpenedDocs()
+        {
+            swApp.CloseDoc(((ModelDoc2)swAsbly).GetTitle());
+            swApp.CloseDoc(component1.GetTitle());
+            swApp.CloseDoc(component2.GetTitle());
+        }
+
+        static void CreateConfigurations()
         {
 
         }
