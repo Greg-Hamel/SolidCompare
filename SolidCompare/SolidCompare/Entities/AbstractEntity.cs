@@ -7,12 +7,12 @@ namespace SolidCompare.Entities
     public abstract class AbstractEntity : IComparableEntity<AbstractEntity>
     {
         protected IFeature relatedFeature = null;
-        
+
         public AbstractEntity(IFeature relatedFeature)
         {
             this.relatedFeature = relatedFeature;
         }
-        
+
         public virtual int GetID()
         {
             return relatedFeature?.GetID() ?? 0;

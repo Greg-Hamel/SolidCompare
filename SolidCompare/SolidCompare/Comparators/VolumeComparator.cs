@@ -16,13 +16,20 @@ namespace SolidCompare
         static AssemblyDoc swAsbly;
         static Component2 swComp1, swComp2;
         static SldWorks.SldWorks swApp = Program.swApp;
-        static Feature MateFeature;
+        static Feature mateFeature;
+        static ModelDoc2 comparePart;
+
         static string programFile = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles);
 
         static ModelDoc2 component1;
         static ModelDoc2 component2;
 
         static bool boolstat;
+        static string componentPath;
+        static string componentFolder;
+        static string comp1Name, comp2Name;
+        static string comparePartName;
+        static string comparePartPath;
 
         public VolumeComparator()
         {
@@ -32,12 +39,41 @@ namespace SolidCompare
         public static void Compare(ModelDoc2 comparer, ModelDoc2 comparee)
         {
             // This is the main method to execute the rest of the comparison.
+            
+
             component1 = comparer;
             component2 = comparee;
-            
+
+            GetInfo();
             CheckComponents();
             CreateAssembly();
             InsertComponents();
+            SaveAsPart();
+            ClosePreviouslyOpenedDocs();
+
+            comparePart = SwApp.OpenFile(comparePartPath);
+
+        }
+
+        static void GetInfo()
+        {
+            string compTitle;
+            string[] strings;
+            int index;
+
+            componentPath = component2.GetPathName();
+
+            compTitle = component1.GetTitle();
+            strings = compTitle.Split(new Char[] { '.' });
+            comp1Name = strings[0];
+
+            compTitle = component2.GetTitle();
+            strings = compTitle.Split(new Char[] { '.' });
+            comp2Name = strings[0];
+
+            index = componentPath.IndexOf(compTitle);
+
+            componentFolder =  componentPath.Substring(0, (index));
         }
 
         static bool CreateAssembly()
@@ -93,17 +129,17 @@ namespace SolidCompare
             ModelDoc2 swModel = (ModelDoc2)swAsbly;
             ModelDocExtension swDocExt = swModel.Extension;
 
-            int MateError;
-            string MateName;
-            string FirstSelection;
-            string SecondSelection;
+            int mateError;
+            string mateName;
+            string firstSelection;
+            string secondSelection;
 
-            // Add Component1 *TBD*
+            // Add Component1
             Logger.Info("Adding first component to assembly...");
             swComp1 = swAsbly.AddComponent5(component1.GetPathName(), (int)swAddComponentConfigOptions_e.swAddComponentConfigOptions_CurrentSelectedConfig, "",
                 false, "", 0, 0, 0);
 
-            string Comp1Name = swComp1.Name2;
+            string comp1Name = swComp1.Name2;
 
             if (swComp1 == null)
             {
@@ -114,12 +150,12 @@ namespace SolidCompare
                 Logger.Info("Component added successfully.");
             }
 
-            // Add Component2 *TBD*
+            // Add Component2
             Logger.Info("Adding second component to assembly...");
             swComp2 = swAsbly.AddComponent5(component2.GetPathName(), (int)swAddComponentConfigOptions_e.swAddComponentConfigOptions_CurrentSelectedConfig, "",
                 false, "", 0, 0, 0);
 
-            string Comp2Name = swComp2.Name2;
+            string comp2Name = swComp2.Name2;
 
             if (swComp2 == null)
             {
@@ -130,77 +166,103 @@ namespace SolidCompare
                 Logger.Info("Component added successfully.");
             }
 
+
+            // Add Mate 1
             Logger.Info("Adding Origin Mate...");
 
             swModel.ClearSelection();
 
-            MateName = "Aligned_Origins";
-            FirstSelection = "Point1@Origin@" + Comp1Name + "@" + swModel.GetTitle();
-            SecondSelection = "Point1@Origin@" + Comp2Name + "@" + swModel.GetTitle();
+            mateName = "Aligned_Origins";
+            firstSelection = "Point1@Origin@" + comp1Name + "@" + swModel.GetTitle();
+            secondSelection = "Point1@Origin@" + comp2Name + "@" + swModel.GetTitle();
 
-            boolstat = swDocExt.SelectByID2(FirstSelection, "EXTSKETCHPOINT", 0, 0, 0, false, 1, null, 0);
-            boolstat = swDocExt.SelectByID2(SecondSelection, "EXTSKETCHPOINT", 0, 0, 0, true, 1, null, 0);
+            boolstat = swDocExt.SelectByID2(firstSelection, "EXTSKETCHPOINT", 0, 0, 0, false, 1, null, 0);
+            boolstat = swDocExt.SelectByID2(secondSelection, "EXTSKETCHPOINT", 0, 0, 0, true, 1, null, 0);
 
-            MateFeature = (Feature)swAsbly.AddMate5((int)swMateType_e.swMateCOINCIDENT, (int)swMateAlign_e.swMateAlignALIGNED,
-                false, 0, 0, 0, 0, 0, 0, 0, 0, false, false, (int)swMateWidthOptions_e.swMateWidth_Centered, out MateError);
-            if (MateError != 1)
+            mateFeature = (Feature)swAsbly.AddMate5((int)swMateType_e.swMateCOINCIDENT, (int)swMateAlign_e.swMateAlignALIGNED,
+                false, 0, 0, 0, 0, 0, 0, 0, 0, false, false, (int)swMateWidthOptions_e.swMateWidth_Centered, out mateError);
+            if (mateError != 1)
             {
-                Logger.Error("VolumeComparator", "InsertComponent", "swAddMateError: "+MateError);
+                Logger.Error("VolumeComparator", "InsertComponent", "swAddMateError: "+mateError);
             }
-            MateFeature.Name = MateName;
+            mateFeature.Name = mateName;
 
             swModel.ClearSelection();
-            Logger.Info("Mate added: " + MateFeature.Name);
+            Logger.Info("Mate added: " + mateFeature.Name);
+
+            // Add Mate 2
 
             Logger.Info("Adding Top Plane Mate...");
 
             swModel.ClearSelection();
 
-            MateName = "Aligned_Top";
-            FirstSelection = "Top@" + Comp1Name + "@" + swModel.GetTitle();
-            SecondSelection = "Top@" + Comp2Name + "@" + swModel.GetTitle();
+            mateName = "Aligned_Top";
+            firstSelection = "Top@" + comp1Name + "@" + swModel.GetTitle();
+            secondSelection = "Top@" + comp2Name + "@" + swModel.GetTitle();
 
-            boolstat = swDocExt.SelectByID2(FirstSelection, "PLANE", 0, 0, 0, false, 1, null, 0);
-            boolstat = swDocExt.SelectByID2(SecondSelection, "PLANE", 0, 0, 0, true, 1, null, 0);
+            boolstat = swDocExt.SelectByID2(firstSelection, "PLANE", 0, 0, 0, false, 1, null, 0);
+            boolstat = swDocExt.SelectByID2(secondSelection, "PLANE", 0, 0, 0, true, 1, null, 0);
 
-            MateFeature = (Feature)swAsbly.AddMate5((int)swMateType_e.swMateCOINCIDENT, (int)swMateAlign_e.swMateAlignALIGNED,
-                false, 0, 0, 0, 0, 0, 0, 0, 0, false, false, (int)swMateWidthOptions_e.swMateWidth_Centered, out MateError);
-            if (MateError != 1)
+            mateFeature = (Feature)swAsbly.AddMate5((int)swMateType_e.swMateCOINCIDENT, (int)swMateAlign_e.swMateAlignALIGNED,
+                false, 0, 0, 0, 0, 0, 0, 0, 0, false, false, (int)swMateWidthOptions_e.swMateWidth_Centered, out mateError);
+            if (mateError != 1)
             {
-                Logger.Error("VolumeComparator", "InsertComponent", "swAddMateError: " + MateError);
+                Logger.Error("VolumeComparator", "InsertComponent", "swAddMateError: " + mateError);
             }
-            MateFeature.Name = MateName;
+            mateFeature.Name = mateName;
 
             swModel.ClearSelection();
-            Logger.Info("Mate added: " + MateFeature.Name);
+            Logger.Info("Mate added: " + mateFeature.Name);
+
+            // Add Mate 3
 
             Logger.Info("Adding Front Plane Mate...");
 
             swModel.ClearSelection();
 
-            MateName = "Aligned_Front";
-            FirstSelection = "Front@" + Comp1Name + "@" + swModel.GetTitle();
-            SecondSelection = "Front@" + Comp2Name + "@" + swModel.GetTitle();
+            mateName = "Aligned_Front";
+            firstSelection = "Front@" + comp1Name + "@" + swModel.GetTitle();
+            secondSelection = "Front@" + comp2Name + "@" + swModel.GetTitle();
 
-            boolstat = swDocExt.SelectByID2(FirstSelection, "PLANE", 0, 0, 0, false, 1, null, 0);
-            boolstat = swDocExt.SelectByID2(SecondSelection, "PLANE", 0, 0, 0, true, 1, null, 0);
+            boolstat = swDocExt.SelectByID2(firstSelection, "PLANE", 0, 0, 0, false, 1, null, 0);
+            boolstat = swDocExt.SelectByID2(secondSelection, "PLANE", 0, 0, 0, true, 1, null, 0);
 
-            MateFeature = (Feature)swAsbly.AddMate5((int)swMateType_e.swMateCOINCIDENT, (int)swMateAlign_e.swMateAlignALIGNED,
-                false, 0, 0, 0, 0, 0, 0, 0, 0, false, false, (int)swMateWidthOptions_e.swMateWidth_Centered, out MateError);
-            if (MateError != 1)
+            mateFeature = (Feature)swAsbly.AddMate5((int)swMateType_e.swMateCOINCIDENT, (int)swMateAlign_e.swMateAlignALIGNED,
+                false, 0, 0, 0, 0, 0, 0, 0, 0, false, false, (int)swMateWidthOptions_e.swMateWidth_Centered, out mateError);
+            if (mateError != 1)
             {
-                Logger.Error("VolumeComparator", "InsertComponent", "swAddMateError: " + MateError);
+                Logger.Error("VolumeComparator", "InsertComponent", "swAddMateError: " + mateError);
             }
-            MateFeature.Name = MateName;
+            mateFeature.Name = mateName;
 
             swModel.ClearSelection();
-            Logger.Info("Mate added: " + MateFeature.Name);
+            Logger.Info("Mate added: " + mateFeature.Name);
 
         }
 
         static void SaveAsPart()
         {
-            
+            ModelDoc2 swModel = (ModelDoc2)swAsbly;
+            int errors = 0;
+            int warnings = 0;
+
+            comparePartName =  "Compare_" + comp1Name + "_&_" + comp2Name + ".sldprt";
+            comparePartPath = componentFolder + comparePartName;
+
+            Logger.Info("Saving Assembly as '.SLDPRT'...");
+            swModel.SaveAs4(comparePartPath, (int)swSaveAsVersion_e.swSaveAsCurrentVersion, (int)swSaveAsOptions_e.swSaveAsOptions_Silent, errors, warnings);
+
+            if (errors != 0) { Logger.Error("VolumeComparator", "SaveAsPart", "swSaveAsError: " + errors); }
+            else if (warnings != 0) { Logger.Warn("swFileSaveWarning: " + warnings); }
+            else
+            {
+                Logger.Info("Save successful.");
+            }
+        }
+
+        static void ClosePreviouslyOpenedDocs()
+        {
+
         }
 
         static double SubstractVolumeAB()
