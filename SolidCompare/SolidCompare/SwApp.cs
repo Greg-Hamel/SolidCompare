@@ -12,7 +12,7 @@ namespace SolidCompare
         private static SldWorks.SldWorks instance;
         private static gtcocswUtilities swUtil;
         static string programFile = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles);
-        private static string swPath =  programFile + @"\SOLIDWORKS Corp\SOLIDWORKS\SLDWORKS.exe";  // Change this to your SolidWorks Directory
+        private static string swPath = programFile + @"\SOLIDWORKS Corp\SOLIDWORKS\SLDWORKS.exe";  // Change this to your SolidWorks Directory
 
         public static SldWorks.SldWorks Instance
         {
@@ -20,8 +20,9 @@ namespace SolidCompare
             {
                 if (instance == null)
                 {
+                    /*
                     bool starting = true;
-
+                    
                     try
                     {
                         Logger.Info("Looking for running process of SolidWorks...");
@@ -51,6 +52,7 @@ namespace SolidCompare
                             }
                         } while (starting);
                     }
+                    */
                     Logger.Info("Handshaking with SolidWorks...");
                     instance = new SldWorks.SldWorks();
                     Logger.Info("SolidWorks handshake completed");
@@ -65,7 +67,6 @@ namespace SolidCompare
             instance.ExitApp();
             Logger.Info("SolidWorks Closed");
         }
-
 
         public static void LoadSwUtilities()
         {
@@ -133,7 +134,7 @@ namespace SolidCompare
             string nameOfFile;
 
             int index = fileName.LastIndexOf("\\");
-            nameOfFile = fileName.Substring(index+1);
+            nameOfFile = fileName.Substring(index + 1);
             string methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
 
             // Set the specifications
@@ -171,8 +172,26 @@ namespace SolidCompare
                 }
             }
 
-            
             return swModel;  // Returns the IModelDoc2
+        }
+
+        public static IModelDoc2 ActivateDocument(IModelDoc2 swModelDoc)
+        {
+            int errors = 0;
+            string methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+
+            IModelDoc2 swActivatedModel = null;
+
+            if (0 == errors)
+            {
+                swActivatedModel = instance.ActivateDoc3(swModelDoc.GetPathName(), false, (int)swRebuildOnActivation_e.swDontRebuildActiveDoc, ref errors);
+            }
+            else
+            {
+                Logger.Error(typeof(SwApp).FullName, methodName, "Failed to open Assembly. error: " + errors);
+            }
+
+            return swActivatedModel;
         }
     }
 }
