@@ -45,7 +45,6 @@ namespace SolidCompare.Comparators
             }
 
             return new CompareResult(added, removed, resultModified, status);
-
         }
     }
 }
