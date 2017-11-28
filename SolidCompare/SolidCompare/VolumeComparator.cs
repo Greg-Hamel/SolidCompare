@@ -41,6 +41,15 @@ namespace SolidCompare
             component1 = comparer;
             component2 = comparee;
 
+            /* need to add a way to differentiate input assemblies vs parts.
+             * Part can be compared one to one as they generaly only contain
+             * one body. Assemblies on the other hand can contain a lot of 
+             * bodies. Assemblies will need to be combined together (Feature)
+             * */
+
+            int volumeDiff, faceDiff, areaDiff;
+            double aMinusB, bMinusA, aAndB;
+
             GetInfo();
             CheckComponents();
             CreateAssembly();
@@ -52,10 +61,18 @@ namespace SolidCompare
             bodies = ((PartDoc)comparePart).GetBodies2((int)swBodyType_e.swSolidBody, true);
             body1 = (Body2)bodies[0];
             body2 = (Body2)bodies[1];
-            Logger.Info("Volume Compare:\t" + CompareVolume());
-            Logger.Info("Area Compare:\t" + CompareArea());
-            Logger.Info("Faces Compare:\t" + CompareFaces());
+            faceDiff = CompareFaces();
+            areaDiff = CompareArea();
+            volumeDiff = CompareVolume();
+            Logger.Info("Volume Compare:\t" + volumeDiff);
+            Logger.Info("Area Compare:\t" + areaDiff);
+            Logger.Info("Faces Compare:\t" + faceDiff);
             CreateConfigurations();
+
+            aMinusB = SubstractVolume(body1, body2);
+            bMinusA = SubstractVolume(body2, body1);
+            aAndB = CommonVolume(body1, body2);
+
         }
 
         static void GetInfo()
@@ -292,17 +309,32 @@ namespace SolidCompare
             }
         }
 
-        static double SubstractVolumeAB()
+        static double SubstractVolume(Body2 a, Body2 b)
         {
+            FeatureManager partFeatureMgr = comparePart.FeatureManager;
+            Feature partFeature;
+            object[] localBodies;
+            double totalBodyVolume = 0;
+
+            partFeature = partFeatureMgr.InsertCombineFeature((int)swBodyOperationType_e.SWBODYCUT, a, b);
+
+            if (partFeature == null)
+            {
+                Logger.Error("VolumeComparator", "SubstractVolume", "Could not create Feature");
+            }
+
+            localBodies = ((PartDoc)comparePart).GetBodies2((int)swBodyType_e.swSolidBody, true);
+
+            foreach (Body2 body in localBodies)
+            {
+                bodyproperties = body.GetMassProperties(0);
+                totalBodyVolume +=
+            }
+
             return 0;  // returns the yielded volume
         }
 
-        static double SubstractVolumeBA()
-        {
-            return 0;  // returns the yielded volume
-        }
-
-        static double CommonVolume()
+        static double CommonVolume(Body2 a, Body2 b)
         {
             return 0;  // returns the yielded volume
         }
