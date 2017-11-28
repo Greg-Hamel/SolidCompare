@@ -47,12 +47,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assembly.cs" />
-    <Compile Include="AssemblyComparator.cs" />
-    <Compile Include="BodyFeatureComparator.cs" />
+    <Compile Include="Comparators\CompareResult.cs" />
+    <Compile Include="Comparators\ListComparator.cs" />
+    <Compile Include="Entities\AbstractEntity.cs" />
+    <Compile Include="Entities\Assembly.cs" />
+    <Compile Include="Comparators\AssemblyComparator.cs" />
+    <Compile Include="Comparators\BodyFeatureComparator.cs" />
     <Compile Include="Component.cs" />
-    <Compile Include="VolumeComparator.cs" />
-    <Compile Include="FeatureComparator.cs" />
+    <Compile Include="Entities\BodyFeature.cs" />
+    <Compile Include="Entities\IComparableEntity.cs" />
+    <Compile Include="Entities\Mate.cs" />
+    <Compile Include="Entities\Part.cs" />
+    <Compile Include="Comparators\VolumeComparator.cs" />
+    <Compile Include="Comparators\IComparator.cs" />
     <Compile Include="Launcher.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -60,8 +67,8 @@
       <DependentUpon>Launcher.cs</DependentUpon>
     </Compile>
     <Compile Include="Logger.cs" />
-    <Compile Include="MateComparator.cs" />
-    <Compile Include="PartComparator.cs" />
+    <Compile Include="Comparators\MateComparator.cs" />
+    <Compile Include="Comparators\PartComparator.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Launcher.resx">
