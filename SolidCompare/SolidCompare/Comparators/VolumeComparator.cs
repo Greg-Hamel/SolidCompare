@@ -329,6 +329,7 @@ namespace SolidCompare
             {
                 if (b_volume >= a_volume)
                 {
+                    Logger.Warn("Body B seems to encompass all of Body A yielding a null volume.");
                     return 0;
                 }
                 else
@@ -354,14 +355,61 @@ namespace SolidCompare
             }
             else
             {
-                return -1;
+                Logger.Error("VolumeComparator.cs", "SubstractVolume()", "Could not suppress feature");
+                return -1; // Suppression did not work
             }
                 
         }
 
         static double CommonVolume(Body2 a, Body2 b)
         {
-            return 0;  // returns the yielded volume
+            FeatureManager partFeatureMgr = comparePart.FeatureManager;
+            Feature partFeature;
+            object[] localBodies;
+            double totalBodyVolume = 0;
+            Body2[] bodies_array = new Body2[] { a, b };
+            double[] bodyproperties;
+            bool suppression;
+            double a_volume = (a.GetMassProperties(0))[3];
+            double b_volume = (b.GetMassProperties(0))[3];
+
+            Logger.Info("Inserting a Combine Feature: Intersection...");
+            partFeature = partFeatureMgr.InsertCombineFeature((int)swBodyOperationType_e.SWBODYINTERSECT, null, bodies_array);
+            if (partFeature == null)
+            {
+                Logger.Warn("No Intersection found between the provided bodies");
+                return 0;  // Zero Volume
+            }
+            Logger.Info("New Combine Feature added.");
+
+            localBodies = ((PartDoc)comparePart).GetBodies2((int)swBodyType_e.swSolidBody, true);
+
+            foreach (Body2 body in localBodies)
+            {
+                bodyproperties = body.GetMassProperties(0);
+                totalBodyVolume += bodyproperties[3];
+            }
+
+            suppression = partFeature.SetSuppression2((int)swFeatureSuppressionAction_e.swSuppressFeature, (int)swInConfigurationOpts_e.swThisConfiguration, null);
+
+            if (suppression == true)
+            {
+                return totalBodyVolume;  // returns the yielded volume
+            }
+            else
+            {
+                Logger.Error("VolumeComparator.cs", "SubstractVolume()", "Could not suppress feature");
+                return -1; // Suppression did not work
+            }
+        }
+
+        static PartDoc AssemblyCombine(AssemblyDoc assembly)
+        {
+            PartDoc combinedAssembly = null;
+
+
+
+            return combinedAssembly;
         }
 
         static int CompareVolume()
@@ -372,7 +420,7 @@ namespace SolidCompare
             double[] body1MassProp, body2MassProp;
             double body1Volume, body2Volume;
 
-            body1MassProp = body1.GetMassProperties(0);  // Using a densities of '0' since we don't need mass
+            body1MassProp = body1.GetMassProperties(0);  // Using a density of '0' since we don't need mass
             body2MassProp = body2.GetMassProperties(0);
 
             body1Volume = Math.Round(body1MassProp[3], 8);
