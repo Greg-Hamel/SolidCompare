@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
@@ -7,9 +8,14 @@ using SwConst;
 
 namespace SolidCompare
 {
+    public class Info
+    {
+        // This class allows the storage of variable value in dictionnary.
+        public object Value { get; set; }
+    }
+
     public class VolumeComparator
     {
-        static AssemblyDoc swAsbly;
         static Component2 swComp1, swComp2;
         static SldWorks.SldWorks swApp = Program.swApp;
         static Feature mateFeature;
@@ -17,18 +23,10 @@ namespace SolidCompare
         static Configuration config1, config2, config3;
         static string programFile = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles);
 
-        static ModelDoc2 component1;
-        static ModelDoc2 component2;
-
-        static object[] bodies;
-        static Body2 body1, body2;
 
         static bool boolstat;
-        static string componentPath;
-        static string componentFolder;
-        static string comp1Name, comp2Name;
         static string comparePartName;
-        static string comparePartPath;
+        static string comparePartPath; 
 
         public VolumeComparator()
         {
@@ -38,36 +36,57 @@ namespace SolidCompare
         public static void Compare(ModelDoc2 comparer, ModelDoc2 comparee)
         {
             // This is the main method to execute the rest of the comparison.
+            ModelDoc2 component1;
+            ModelDoc2 component2;
+
             component1 = comparer;
             component2 = comparee;
 
-            /* need to add a way to differentiate input assemblies vs parts.
-             * Part can be compared one to one as they generaly only contain
-             * one body. Assemblies on the other hand can contain a lot of 
-             * bodies. Assemblies will need to be combined together (Feature)
-             * */
+            StartComparison(component1, component2);
+        }
 
+        public static void Compare(Component2 comparer, Component2 comparee)
+        {
+            // This is the main method to execute the rest of the comparison.
+            ModelDoc2 component1;
+            ModelDoc2 component2;
+
+            component1 = (ModelDoc2)comparer;
+            component2 = (ModelDoc2)comparee;
+
+            StartComparison(component1, component2);
+        }
+
+        static void StartComparison(ModelDoc2 component1, ModelDoc2 component2)
+        {
+            AssemblyDoc swAsbly;
             int volumeDiff, faceDiff, areaDiff;
             double aMinusB, bMinusA, aAndB;
+            object[] bodies;
+            Body2 body1, body2;
 
-            GetInfo();
-            CheckComponents();
-            CreateAssembly();
-            InsertComponents();
-            SaveAsPart();
-            ClosePreviouslyOpenedDocs();
+            Dictionary<string, Info> component1Info;
+            Dictionary<string, Info> component2Info;
+
+            component1Info = GetInfo(component1);
+            component2Info = GetInfo(component2);
+            CheckComponents(component1, component2);
+            swAsbly = CreateAssembly();
+            InsertComponents(swAsbly, component1, component2);
+            SaveAsPart(swAsbly, component1Info, component2Info);
+            CloseDocs(new object[] { swAsbly, component1, component2 });
 
             comparePart = SwApp.OpenFile(comparePartPath);
             bodies = ((PartDoc)comparePart).GetBodies2((int)swBodyType_e.swSolidBody, true);
             body1 = (Body2)bodies[0];
             body2 = (Body2)bodies[1];
-            faceDiff = CompareFaces();
-            areaDiff = CompareArea();
-            volumeDiff = CompareVolume();
+
+            faceDiff = CompareFaces(body1, body2);
+            areaDiff = CompareArea(body1, body2);
+            volumeDiff = CompareVolume(body1, body2);
             Logger.Info("Volume Compare:\t" + volumeDiff);
             Logger.Info("Area Compare:\t" + areaDiff);
             Logger.Info("Faces Compare:\t" + faceDiff);
-            CreateConfigurations();
 
             aMinusB = SubstractVolume(body1, body2);
             Logger.Info("Volume A-B: " + aMinusB);
@@ -77,55 +96,66 @@ namespace SolidCompare
             Logger.Info("Volume B&A: " + aAndB);
         }
 
-        static void GetInfo()
+        static Dictionary<string, Info> GetInfo(ModelDoc2 component)
         {
-            string compTitle;
+            Dictionary<string, Info> infoDict = new Dictionary<string, Info>()
+            {
+                {"Path", new Info()},   // This is the full path including name and extension.
+                {"Title", new Info()},  // This is the title of the document including the extension.
+                {"Name", new Info() },  // This is the title of the document excluding the extension.
+                {"Folder", new Info()}  // This is the full path excluing name and extension.
+            };
+
             string[] strings;
             int index;
 
-            componentPath = component2.GetPathName();
+            infoDict["Path"].Value = component.GetPathName();
 
-            compTitle = component1.GetTitle();
-            strings = compTitle.Split(new Char[] { '.' });
-            comp1Name = strings[0];
+            infoDict["Title"].Value = component.GetTitle();
+            strings = ((string)infoDict["Title"].Value).Split(new Char[] { '.' });
+            infoDict["Name"].Value = strings[0];
 
-            compTitle = component2.GetTitle();
-            strings = compTitle.Split(new Char[] { '.' });
-            comp2Name = strings[0];
+            index = ((string)infoDict["Path"].Value).IndexOf((string)infoDict["Title"].Value);
 
-            index = componentPath.IndexOf(compTitle);
+            infoDict["Folder"].Value = ((string)infoDict["Path"].Value).Substring(0, (index));
 
-            componentFolder =  componentPath.Substring(0, (index));
+            return infoDict;
         }
 
-        static bool CreateAssembly()
+        static AssemblyDoc CreateAssembly()
         {
             string AsblyTitle;
+            AssemblyDoc newAssembly;
 
             Logger.Info("Creating the assembly...");
-            swAsbly = (AssemblyDoc)swApp.NewDocument(programFile + @"\SOLIDWORKS Corp\SOLIDWORKS\data\templates\assem.asmdot", 0, 0, 0);
+            newAssembly = (AssemblyDoc)swApp.NewDocument(programFile + @"\SOLIDWORKS Corp\SOLIDWORKS\data\templates\assem.asmdot", 0, 0, 0);
 
-            AsblyTitle = ((ModelDoc2)swAsbly).GetTitle();
+            AsblyTitle = ((ModelDoc2)newAssembly).GetTitle();
 
-            if (swAsbly == null)
+            if (newAssembly == null)
             {
                 Logger.Warn("Assembly document creation was unsuccessful.");
-                return false;
+                return null;
             }
             else
             {
                 Logger.Info("Assembly created.");
-                return true;
+                return newAssembly;
             }
 
         }
 
-        static void CheckComponents()
+        static void CheckComponents(ModelDoc2 component1, ModelDoc2 component2)
         {
             Logger.Info("Components are being verified...");
             if (component1.GetType() == (int)swDocumentTypes_e.swDocASSEMBLY || component2.GetType() == (int)swDocumentTypes_e.swDocASSEMBLY)
             {
                 Logger.Info("Components are both of Assembly Type");
+
+                Logger.Info("Adding all bodies of first assembly");
+
+                Logger.Info("Adding all bodies of first assembly");
+
             }
             else if (component1.GetType() == (int)swDocumentTypes_e.swDocPART || component2.GetType() == (int)swDocumentTypes_e.swDocPART)
             {
@@ -145,12 +175,12 @@ namespace SolidCompare
             }
         }
 
-        static void InsertComponents()
+        static void InsertComponents(AssemblyDoc assembly, ModelDoc2 component1, ModelDoc2 component2)
         {
             /* This will insert the components into the newly created
              *  assembly and mate them so their origins are aligned   */
 
-            ModelDoc2 swModel = (ModelDoc2)swAsbly;
+            ModelDoc2 swModel = (ModelDoc2)assembly;
             ModelDocExtension swDocExt = swModel.Extension;
 
             int mateError;
@@ -160,7 +190,7 @@ namespace SolidCompare
 
             // Add Component1
             Logger.Info("Adding first component to assembly...");
-            swComp1 = swAsbly.AddComponent5(component1.GetPathName(), (int)swAddComponentConfigOptions_e.swAddComponentConfigOptions_CurrentSelectedConfig, "",
+            swComp1 = assembly.AddComponent5(component1.GetPathName(), (int)swAddComponentConfigOptions_e.swAddComponentConfigOptions_CurrentSelectedConfig, "",
                 false, "", 0, 0, 0);
 
             string comp1Name = swComp1.Name2;
@@ -176,7 +206,7 @@ namespace SolidCompare
 
             // Add Component2
             Logger.Info("Adding second component to assembly...");
-            swComp2 = swAsbly.AddComponent5(component2.GetPathName(), (int)swAddComponentConfigOptions_e.swAddComponentConfigOptions_CurrentSelectedConfig, "",
+            swComp2 = assembly.AddComponent5(component2.GetPathName(), (int)swAddComponentConfigOptions_e.swAddComponentConfigOptions_CurrentSelectedConfig, "",
                 false, "", 0, 0, 0);
 
             string comp2Name = swComp2.Name2;
@@ -203,7 +233,7 @@ namespace SolidCompare
             boolstat = swDocExt.SelectByID2(firstSelection, "EXTSKETCHPOINT", 0, 0, 0, false, 1, null, 0);
             boolstat = swDocExt.SelectByID2(secondSelection, "EXTSKETCHPOINT", 0, 0, 0, true, 1, null, 0);
 
-            mateFeature = (Feature)swAsbly.AddMate5((int)swMateType_e.swMateCOINCIDENT, (int)swMateAlign_e.swMateAlignALIGNED,
+            mateFeature = (Feature)assembly.AddMate5((int)swMateType_e.swMateCOINCIDENT, (int)swMateAlign_e.swMateAlignALIGNED,
                 false, 0, 0, 0, 0, 0, 0, 0, 0, false, false, (int)swMateWidthOptions_e.swMateWidth_Centered, out mateError);
             if (mateError != 1)
             {
@@ -227,7 +257,7 @@ namespace SolidCompare
             boolstat = swDocExt.SelectByID2(firstSelection, "PLANE", 0, 0, 0, false, 1, null, 0);
             boolstat = swDocExt.SelectByID2(secondSelection, "PLANE", 0, 0, 0, true, 1, null, 0);
 
-            mateFeature = (Feature)swAsbly.AddMate5((int)swMateType_e.swMateCOINCIDENT, (int)swMateAlign_e.swMateAlignALIGNED,
+            mateFeature = (Feature)assembly.AddMate5((int)swMateType_e.swMateCOINCIDENT, (int)swMateAlign_e.swMateAlignALIGNED,
                 false, 0, 0, 0, 0, 0, 0, 0, 0, false, false, (int)swMateWidthOptions_e.swMateWidth_Centered, out mateError);
             if (mateError != 1)
             {
@@ -251,7 +281,7 @@ namespace SolidCompare
             boolstat = swDocExt.SelectByID2(firstSelection, "PLANE", 0, 0, 0, false, 1, null, 0);
             boolstat = swDocExt.SelectByID2(secondSelection, "PLANE", 0, 0, 0, true, 1, null, 0);
 
-            mateFeature = (Feature)swAsbly.AddMate5((int)swMateType_e.swMateCOINCIDENT, (int)swMateAlign_e.swMateAlignALIGNED,
+            mateFeature = (Feature)assembly.AddMate5((int)swMateType_e.swMateCOINCIDENT, (int)swMateAlign_e.swMateAlignALIGNED,
                 false, 0, 0, 0, 0, 0, 0, 0, 0, false, false, (int)swMateWidthOptions_e.swMateWidth_Centered, out mateError);
             if (mateError != 1)
             {
@@ -264,17 +294,18 @@ namespace SolidCompare
 
         }
 
-        static void SaveAsPart()
+        static void SaveAsPart(AssemblyDoc assembly, Dictionary<string, Info> comp1info, Dictionary<string, Info> comp2info)
         {
-            ModelDoc2 swModel = (ModelDoc2)swAsbly;
+            // Used when creating the comparing assembly.
+            ModelDoc2 model = (ModelDoc2)assembly;
             int errors = 0;
             int warnings = 0;
 
-            comparePartName =  "Compare_" + comp1Name + "_&_" + comp2Name + ".sldprt";
-            comparePartPath = componentFolder + comparePartName;
+            comparePartName =  "Compare_" + comp1info["Name"].Value + "_&_" + comp2info["Name"].Value + ".sldprt";
+            comparePartPath = comp1info["Folder"].Value + comparePartName;
 
             Logger.Info("Saving Assembly as '.SLDPRT'...");
-            swModel.SaveAs4(comparePartPath, (int)swSaveAsVersion_e.swSaveAsCurrentVersion, (int)swSaveAsOptions_e.swSaveAsOptions_Silent, errors, warnings);
+            model.SaveAs4(comparePartPath, (int)swSaveAsVersion_e.swSaveAsCurrentVersion, (int)swSaveAsOptions_e.swSaveAsOptions_Silent, errors, warnings);
 
             if (errors != 0) { Logger.Error("VolumeComparator", "SaveAsPart", "swSaveAsError: " + errors); }
             else if (warnings != 0) { Logger.Warn("swFileSaveWarning: " + warnings); }
@@ -284,21 +315,30 @@ namespace SolidCompare
             }
         }
 
-        static void ClosePreviouslyOpenedDocs()
+        static void CloseDocs(object[] docs)
         {
-            swApp.CloseDoc(((ModelDoc2)swAsbly).GetTitle());
-            swApp.CloseDoc(component1.GetTitle());
-            swApp.CloseDoc(component2.GetTitle());
+            foreach (object doc in docs)
+            {
+                try
+                {
+                    ModelDoc2 modelDoc = (ModelDoc2)doc;
+                    swApp.CloseDoc(modelDoc.GetTitle());
+                }
+                catch
+                {
+                    Logger.Error("VolumeComparator.cs", "CloseDocs()", "One of the provided documents cannot be converted to ModelDoc2");
+                }
+            }
         }
 
-        static void CreateConfigurations()
+        static void CreateConfigurations(string component1Name, string component2Name)
         {
             Logger.Info("Creating three (3) configurations...");
-            config1 = comparePart.AddConfiguration3(comp1Name+"_minus_"+ comp2Name, 
+            config1 = comparePart.AddConfiguration3(component1Name + "_minus_"+ component2Name, 
                 "Substraction of body1 minus body2", "", (int)swConfigurationOptions2_e.swConfigOption_DontActivate);
-            config2 = comparePart.AddConfiguration3(comp2Name + "_minus_" + comp1Name,
+            config2 = comparePart.AddConfiguration3(component2Name + "_minus_" + component1Name,
                 "Substraction of body2 minus body1", "", (int)swConfigurationOptions2_e.swConfigOption_DontActivate);
-            config3 = comparePart.AddConfiguration3(comp1Name + "_and_" + comp2Name,
+            config3 = comparePart.AddConfiguration3(component1Name + "_and_" + component2Name,
                 "Combination of body1 and body2", "", (int)swConfigurationOptions2_e.swConfigOption_DontActivate);
 
             if (config1 != null || config2 != null | config3 != null)
@@ -399,7 +439,7 @@ namespace SolidCompare
             else
             {
                 Logger.Error("VolumeComparator.cs", "SubstractVolume()", "Could not suppress feature");
-                return -1; // Suppression did not work
+                return -1;  // Suppression did not work
             }
         }
 
@@ -412,7 +452,7 @@ namespace SolidCompare
             return combinedAssembly;
         }
 
-        static int CompareVolume()
+        static int CompareVolume(Body2 a, Body2 b)
         {
             /* returns 0 for no change in volume
              * returns 1 for negative change
@@ -420,8 +460,8 @@ namespace SolidCompare
             double[] body1MassProp, body2MassProp;
             double body1Volume, body2Volume;
 
-            body1MassProp = body1.GetMassProperties(0);  // Using a density of '0' since we don't need mass
-            body2MassProp = body2.GetMassProperties(0);
+            body1MassProp = a.GetMassProperties(0);  // Using a density of '0' since we don't need mass
+            body2MassProp = b.GetMassProperties(0);
 
             body1Volume = Math.Round(body1MassProp[3], 8);
             body2Volume = Math.Round(body2MassProp[3], 8);
@@ -431,7 +471,7 @@ namespace SolidCompare
             return IncDecDoubleReport(body1Volume, body2Volume, "CompareVolume()");
         }
 
-        static int CompareFaces()
+        static int CompareFaces(Body2 a, Body2 b)
         {
             /* returns 0 for no change in number of faces
              * returns 1 for negative change
@@ -439,8 +479,8 @@ namespace SolidCompare
 
             int body1Faces, body2Faces;
 
-            body1Faces = body1.GetFaceCount();
-            body2Faces = body2.GetFaceCount();
+            body1Faces = a.GetFaceCount();
+            body2Faces = b.GetFaceCount();
 
 
             Logger.Info("Faces A:" + body1Faces + "\tFaces B:" + body2Faces);
@@ -448,7 +488,7 @@ namespace SolidCompare
             return IncDecIntReport(body1Faces, body2Faces, "CompareFaces()");
         }
 
-        static int CompareArea()
+        static int CompareArea(Body2 a, Body2 b)
         {
             /* returns 0 for no change in total surface
              * returns 1 for negative change
@@ -458,8 +498,8 @@ namespace SolidCompare
             double body1Area, body2Area;
 
 
-            body1Faces = body1.GetFaces();
-            body2Faces = body2.GetFaces();
+            body1Faces = a.GetFaces();
+            body2Faces = b.GetFaces();
 
             body1Area = 0;
             foreach (Face2 face in body1Faces)
@@ -480,6 +520,7 @@ namespace SolidCompare
 
             return IncDecDoubleReport(body1Area, body2Area, "CompareArea()");
         }
+
         static int IncDecDoubleReport(double number1, double number2, string methodname)
         {
             if (number1 == number2) { return 0; }
