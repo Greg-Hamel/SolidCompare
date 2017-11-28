@@ -70,9 +70,11 @@ namespace SolidCompare
             CreateConfigurations();
 
             aMinusB = SubstractVolume(body1, body2);
+            Logger.Info("Volume A-B: " + aMinusB);
             bMinusA = SubstractVolume(body2, body1);
+            Logger.Info("Volume B-A: " + aMinusB);
             aAndB = CommonVolume(body1, body2);
-
+            Logger.Info("Volume B&A: " + aAndB);
         }
 
         static void GetInfo()
@@ -315,23 +317,46 @@ namespace SolidCompare
             Feature partFeature;
             object[] localBodies;
             double totalBodyVolume = 0;
+            Body2[] bodies_array = new Body2[] { b };
+            double[] bodyproperties;
+            bool suppression;
+            double a_volume = (a.GetMassProperties(0))[3];
+            double b_volume = (b.GetMassProperties(0))[3];
 
-            partFeature = partFeatureMgr.InsertCombineFeature((int)swBodyOperationType_e.SWBODYCUT, a, b);
-
+            Logger.Info("Inserting a Combine Feature: Substraction...");
+            partFeature = partFeatureMgr.InsertCombineFeature((int)swBodyOperationType_e.SWBODYCUT, a, bodies_array);
             if (partFeature == null)
             {
-                Logger.Error("VolumeComparator", "SubstractVolume", "Could not create Feature");
+                if (b_volume >= a_volume)
+                {
+                    return 0;
+                }
+                else
+                {
+                    Logger.Error("VolumeComparator", "SubstractVolume", "Could not create Feature");
+                }
             }
+            Logger.Info("New Combine Feature added.");
 
             localBodies = ((PartDoc)comparePart).GetBodies2((int)swBodyType_e.swSolidBody, true);
 
             foreach (Body2 body in localBodies)
             {
                 bodyproperties = body.GetMassProperties(0);
-                totalBodyVolume +=
+                totalBodyVolume += bodyproperties[3];
             }
 
-            return 0;  // returns the yielded volume
+            suppression = partFeature.SetSuppression2((int)swFeatureSuppressionAction_e.swSuppressFeature, (int)swInConfigurationOpts_e.swThisConfiguration, null);
+
+            if (suppression == true)
+            {
+                return totalBodyVolume;  // returns the yielded volume
+            }
+            else
+            {
+                return -1;
+            }
+                
         }
 
         static double CommonVolume(Body2 a, Body2 b)
