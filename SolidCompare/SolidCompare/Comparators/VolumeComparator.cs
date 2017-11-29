@@ -65,6 +65,7 @@ namespace SolidCompare
             Body2 body1, body2;
             ModelDoc2 comparePart;
             int comparisonType;
+            double volumeA, volumeB;
 
             Dictionary<string, Info> component1Info;
             Dictionary<string, Info> component2Info;
@@ -88,6 +89,9 @@ namespace SolidCompare
             bodies = ((PartDoc)comparePart).GetBodies2((int)swBodyType_e.swSolidBody, true);
             body1 = (Body2)bodies[0];
             body2 = (Body2)bodies[1];
+
+            volumeA = (body1.GetMassProperties(0))[3];
+            volumeB = (body2.GetMassProperties(0))[3];
 
             faceDiff = CompareFaces(body1, body2);
             areaDiff = CompareArea(body1, body2);
@@ -384,6 +388,8 @@ namespace SolidCompare
             }
             else { Logger.Error("VolumeComparator", "SaveAsPart", "Couldn't save for unknown reason."); }
 
+            CloseDocs(new object[] { assembly });
+
             convertedAssembly = SwApp.OpenFile(assemblyPartPath);
 
             FeatureManager partFeatureMgr = convertedAssembly.FeatureManager;
@@ -630,6 +636,64 @@ namespace SolidCompare
             else
             {
                 Logger.Error("VolumeComparator", methodname, "Unknown case has happened...");
+                return -1;
+            }
+        }
+
+        static int casefinder(double volumeA, double volumeB, int volumedifference, int facedifference, int areadifference, double amb, double bma, double anb)
+        {
+            if (volumedifference == 0 && areadifference == 0 && amb > 0 && bma > 0 && anb > 0)
+            {
+                // Moved Feature
+                return 1;
+            }
+            else if (volumedifference == 2 && areadifference == 2 && (facedifference == 0 || facedifference == 2) && amb == 0 && bma > 0 && anb == volumeA)
+            {
+                // New Extrusion
+                return 2;
+            }
+            else if (volumedifference == 1 && areadifference == 1 && (facedifference == 0 || facedifference == 1) && amb > 0 && bma == 0 && anb == volumeB)
+            {
+                // Removed Extrusion
+                return 3;
+            }
+            else if (volumedifference == 1 && facedifference == 2 && amb > 0 && bma == 0 && anb == volumeB)
+            {
+                // New Hole
+                return 4;
+            }
+            else if (volumedifference == 2 && facedifference == 1 && amb == 0 && bma > 0 && anb == volumeA)
+            {
+                // Removed Hole
+                return 5;
+            }
+            else if (facedifference == 2 && amb > 0 && bma > 0 && anb != volumeA && anb != volumeB)
+            {
+                // New Hole and Extrusion
+                return 6;
+            }
+            else if (facedifference == 1 && amb > 0 && bma > 0 && anb != volumeA && anb != volumeB)
+            {
+                // Removed hole and extrusion
+                return 7;
+            }
+            else if (volumedifference == 0 && areadifference == 0 && facedifference == 0  && amb > 0 && bma > 0 && anb == volumeA && anb == volumeB)
+            {
+                // Parts are the same
+                return 8;
+            }
+            else
+            {
+                // Unknown Case
+                Logger.Warn("Unknown Case:" +
+                    "\n\t\t\t\t\t\t\t\t Volume A:     " + volumeA +
+                    "\n\t\t\t\t\t\t\t\t Volume B:     " + volumeB +
+                    "\n\t\t\t\t\t\t\t\t Volume Diff.: " + volumedifference +
+                    "\n\t\t\t\t\t\t\t\t Face # Diff.: " + facedifference +
+                    "\n\t\t\t\t\t\t\t\t Area # Diff.: " + areadifference +
+                    "\n\t\t\t\t\t\t\t\t Volume A-B:   " + amb +
+                    "\n\t\t\t\t\t\t\t\t Volume B-A:   " + bma +
+                    "\n\t\t\t\t\t\t\t\t Volume A&B:   " + anb);
                 return -1;
             }
         }
