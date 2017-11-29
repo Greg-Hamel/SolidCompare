@@ -13,6 +13,11 @@ namespace SolidCompare.Entities
             this.relatedFeature = relatedFeature;
         }
 
+        public virtual IFeature GetRelatedFeature()
+        {
+            return relatedFeature;
+        }
+
         public virtual int GetID()
         {
             return relatedFeature?.GetID() ?? 0;

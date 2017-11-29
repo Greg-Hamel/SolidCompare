@@ -49,9 +49,10 @@
   <ItemGroup>
     <Compile Include="Comparators\CompareResult.cs" />
     <Compile Include="Comparators\ListComparator.cs" />
+    <Compile Include="Comparators\DocumentPropertyComparator.cs" />
     <Compile Include="Entities\AbstractEntity.cs" />
     <Compile Include="Entities\Assembly.cs" />
-    <Compile Include="Comparators\AssemblyComparator.cs" />
+    <Compile Include="Comparators\GeometryComparator.cs" />
     <Compile Include="Comparators\BodyFeatureComparator.cs" />
     <Compile Include="Component.cs" />
     <Compile Include="Entities\BodyFeature.cs" />
@@ -68,7 +69,7 @@
     </Compile>
     <Compile Include="Logger.cs" />
     <Compile Include="Comparators\MateComparator.cs" />
-    <Compile Include="Comparators\PartComparator.cs" />
+    <Compile Include="Comparators\FeaturePropertyComparator.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Launcher.resx">

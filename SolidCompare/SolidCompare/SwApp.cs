@@ -77,7 +77,14 @@ namespace SolidCompare
                 {
                     Logger.Info("Loading SolidWorks utilities...");
                     int status = instance.LoadAddIn(instance.GetExecutablePath() + "\\sldUtils\\SwLoaderSw.dll");
-                    if ((int)swLoadAddinError_e.swSuccess == status || (int)swLoadAddinError_e.swAddinAlreadyLoaded == status)
+
+                    if (status == (int)swLoadAddinError_e.swSuccess)
+                    {
+                        // Confirm by loading again
+                        status = instance.LoadAddIn(instance.GetExecutablePath() + "\\sldUtils\\SwLoaderSw.dll");
+                    }
+
+                    if (status == (int)swLoadAddinError_e.swSuccess || status == (int)swLoadAddinError_e.swAddinAlreadyLoaded)
                     {
                         swUtil = (gtcocswUtilities)instance.GetAddInObject("Utilities.UtilitiesApp");
 
@@ -132,16 +139,20 @@ namespace SolidCompare
             int errors = 0;
             int warnings = 0;
             string nameOfFile;
+            string methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
 
             int index = fileName.LastIndexOf("\\");
             nameOfFile = fileName.Substring(index + 1);
-            string methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+
+            string activeFolder = fileName.Substring(0, index);
+            instance.SetCurrentWorkingDirectory(activeFolder);
+
 
             // Set the specifications
             swDocSpecification = (IDocumentSpecification)instance.GetOpenDocSpec(fileName);
             Logger.Info("'" + nameOfFile + "' is a " + (swDocumentTypes_e)swDocSpecification.DocumentType);
             swDocSpecification.Selective = false;
-            // swDocSpecification.DocumentType = (int)swDocumentTypes_e.swDocASSEMBLY;
+            //swDocSpecification.DocumentType = (int)swDocumentTypes_e.swDocASSEMBLY;
             // swDocSpecification.DisplayState = "Default_Display State-1";
             swDocSpecification.UseLightWeightDefault = false;
             swDocSpecification.LightWeight = false;
@@ -171,7 +182,6 @@ namespace SolidCompare
                     Logger.Warn("Opening File warning: " + warnings);
                 }
             }
-
             return swModel;  // Returns the IModelDoc2
         }
 

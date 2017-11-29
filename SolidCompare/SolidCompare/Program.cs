@@ -13,7 +13,9 @@ namespace SolidCompare
         {
             // TEMPORARY START - for tests 
             string refFileName = "C:\\SOLIDWORKS Training Files\\API Fundamentals\\Lesson11 - Notifications\\Exercises\\UJ_for_INT_r.sldasm";
-            string modifiedFileName = "C:\\SOLIDWORKS Training Files\\API Fundamentals\\Lesson11 - Notifications\\Exercises\\UJ_for_INT_modif.sldasm";
+            //string modifiedFileName = "C:\\SOLIDWORKS Training Files\\API Fundamentals\\Lesson11 - Notifications\\Exercises mod\\UJ_for_INT_r2.sldasm";
+            string modifiedFileName = "C:\\SOLIDWORKS Training Files\\API Fundamentals\\Lesson11 - Notifications\\Exercises mod\\UJ_for_INT_modif.sldasm";
+            //string modifiedFileName = "C:\\SOLIDWORKS Training Files\\API Fundamentals\\Lesson11 - Notifications\\Exercises mod\\UJ_for_INT_r2_similar.sldasm";
 
             swApp = SwApp.Instance;
             swApp.Visible = true;
