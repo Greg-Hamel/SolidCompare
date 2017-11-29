@@ -20,39 +20,6 @@ namespace SolidCompare
             {
                 if (instance == null)
                 {
-                    /*
-                    bool starting = true;
-                    
-                    try
-                    {
-                        Logger.Info("Looking for running process of SolidWorks...");
-                        instance = (SldWorks.SldWorks)Marshal.GetActiveObject("SldWorks.Application");
-                        Logger.Info("Solidworks already running");
-                    }
-                    catch
-                    {
-                        Logger.Warn("Solidworks does not seem to be running, attempting to start SolidWorks...");
-                        try { Process.Start(swPath); }
-                        catch { Logger.Error("SwApp", "'Instance - Get'", "SolidWorks Path incorrect" + swPath); }
-                        Logger.Info("Start command issued...");
-
-                        do
-                        {
-                            Logger.Info("Waiting for Solidworks...");
-                            try
-                            {
-                                instance = (SldWorks.SldWorks)Marshal.GetActiveObject("SldWorks.Application");
-                                starting = false;
-                                Logger.Info("Solidworks has completed its startup sequence.");
-                            }
-                            catch
-                            {
-                                Logger.Info("Solidworks is still starting... Waiting 1 sec");
-                                System.Threading.Thread.Sleep(1000);
-                            }
-                        } while (starting);
-                    }
-                    */
                     Logger.Info("Handshaking with SolidWorks...");
                     instance = new SldWorks.SldWorks();
                     Logger.Info("SolidWorks handshake completed");

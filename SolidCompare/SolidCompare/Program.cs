@@ -1,7 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
+using Microsoft.Win32.SafeHandles;
 using SldWorks;
-using SolidCompare.Entities;
+using SwConst;
 
 namespace SolidCompare
 {
@@ -11,20 +19,6 @@ namespace SolidCompare
 
         static void Main()
         {
-            // TEMPORARY START - for tests 
-            string refFileName = "C:\\SOLIDWORKS Training Files\\API Fundamentals\\Lesson11 - Notifications\\Exercises\\UJ_for_INT_r.sldasm";
-            //string modifiedFileName = "C:\\SOLIDWORKS Training Files\\API Fundamentals\\Lesson11 - Notifications\\Exercises mod\\UJ_for_INT_r2.sldasm";
-            string modifiedFileName = "C:\\SOLIDWORKS Training Files\\API Fundamentals\\Lesson11 - Notifications\\Exercises mod\\UJ_for_INT_modif.sldasm";
-            //string modifiedFileName = "C:\\SOLIDWORKS Training Files\\API Fundamentals\\Lesson11 - Notifications\\Exercises mod\\UJ_for_INT_r2_similar.sldasm";
-
-            swApp = SwApp.Instance;
-            swApp.Visible = true;
-            Assembly refAssembly = new Assembly((IAssemblyDoc)SwApp.OpenFile(refFileName));
-            Assembly modAssembly = new Assembly((IAssemblyDoc)SwApp.OpenFile(modifiedFileName));
-            var compareResult = refAssembly.CompareTo(modAssembly);
-            Console.WriteLine(compareResult);
-            // TEMPORARY END
-
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Launcher lcher = new Launcher();
@@ -35,7 +29,18 @@ namespace SolidCompare
             string dir1 = lcher.directory1;
             string dir2 = lcher.directory2;
 
-            //swApp = SwApp.Instance;  // Get SolidWorks
+            swApp = SwApp.Instance;  // Get SolidWorks
+
+            // The following is used for testing of this branch only.
+
+            ModelDoc2 Part1 = SwApp.OpenFile(@"C:\Users\hameg\Documents\SWs\A.SLDPRT");
+            ModelDoc2 Part2 = SwApp.OpenFile(@"C:\Users\hameg\Documents\SWs\B.SLDPRT");
+
+            VolumeComparator.Compare(Part1, Part2);
+
+
+            Logger.EndReport();
+            MessageBox.Show("Done");
         }
 
     }
