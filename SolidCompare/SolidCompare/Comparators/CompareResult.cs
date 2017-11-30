@@ -10,21 +10,30 @@ namespace SolidCompare.Comparators
     public enum CompareResultStatus
     {
         NotPerformed = -1,
-        Equal = 0,
+        Identical = 0,
         Similar = 1,
         Different = 2,
     }
 
     public class CompareResult
     {
-        Object added;
-        Object removed;
-        Object modified;
-        CompareResultStatus status;
+        private int comparedId;
+        private List<Object> added = new List<object>();
+        private List<Object> removed = new List<object>();
+        private List<Object> changed = new List<object>();
+        private List<Object> unchanged = new List<object>();
+
+        private CompareResultStatus status = CompareResultStatus.NotPerformed;
 
         public CompareResult()
         {
 
+        }
+
+        public CompareResult(int comparedId, CompareResultStatus status)
+        {
+            this.comparedId = comparedId;
+            this.status = status;
         }
 
         public CompareResult(CompareResultStatus status)
@@ -32,15 +41,40 @@ namespace SolidCompare.Comparators
             this.status = status;
         }
 
-        public CompareResult(object added, object removed, object modified, CompareResultStatus status)
+        public CompareResult(List<Object> added, List<Object> removed, List<Object> changed, List<Object> unchanged, CompareResultStatus status)
         {
             this.added = added;
             this.removed = removed;
-            this.modified = modified;
+            this.changed = changed;
+            this.unchanged = unchanged;
             this.status = status;
         }
 
-        public Object Added
+        public int ComparedId
+        {
+            get
+            {
+                return comparedId;
+            }
+            set
+            {
+                comparedId = value;
+            }
+        }
+
+        public List<Object> Unchanged
+        {
+            get
+            {
+                return unchanged;
+            }
+            set
+            {
+                unchanged = value;
+            }
+        }
+
+        public List<Object> Added
         {
             get
             {
@@ -52,7 +86,7 @@ namespace SolidCompare.Comparators
             }
         }
 
-        public Object Removed
+        public List<Object> Removed
         {
             get
             {
@@ -64,15 +98,15 @@ namespace SolidCompare.Comparators
             }
         }
 
-        public Object Modified
+        public List<Object> Changed
         {
             get
             {
-                return modified;
+                return changed;
             }
             set
             {
-                modified = value;
+                changed = value;
             }
         }
 
@@ -86,6 +120,38 @@ namespace SolidCompare.Comparators
             {
                 status = value;
             }
+        }
+
+        public CompareResult Merge(CompareResult newResult)
+        {
+            added.AddRange(newResult.Added);
+            changed.AddRange(newResult.Changed);
+            removed.AddRange(newResult.Removed);
+            unchanged.AddRange(newResult.Unchanged);
+            status = (CompareResultStatus)Math.Max((int)status, (int)newResult.Status);
+
+            return this;
+        }
+
+        private string ListToString(string listName, List<Object> list)
+        {
+            string result = list.Count > 0 ? "\t" + listName + "\n" : "";
+
+            foreach (Object element in list)
+            {
+                result += "\t\t " + element + "\n";
+            }
+
+            return result;
+        }
+
+        public override string ToString()
+        {
+            string result = "[COMPARING: id = " + comparedId + "] " + Status + "\n";
+            result += ListToString("[ADDED]", added) + ListToString("[REMOVED]", removed)
+                + ListToString("[CHANGED]", changed) + ListToString("[UNCHANGED]", unchanged);
+
+            return result;
         }
     }
 }

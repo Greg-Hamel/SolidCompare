@@ -18,9 +18,28 @@ namespace SolidCompare.Entities
             this.swPart = swPart;
         }
 
+        public IPartDoc SwPart
+        {
+            get
+            {
+                return swPart;
+            }
+        }
+
         public override CompareResult CompareTo(AbstractEntity target)
         {
-            return new CompareResult(CompareResultStatus.NotPerformed);
+            IModelDoc2 refPartDoc = (IModelDoc2)SwPart;
+            IModelDoc2 modPartDoc = (IModelDoc2)((Part)target).SwPart;
+            
+            CompareResult result = DocumentPropertyComparator.Instance.Compare(refPartDoc, modPartDoc);
+            // Console.WriteLine(" +++++ Part " + targetPartDoc.GetPathName() + " --- " + result);
+
+            if (CompareResultStatus.Identical != result.Status)
+            {
+                // Deep Comparison
+            }
+
+            return new CompareResult(GetID(), result.Status);
         }
 
     }

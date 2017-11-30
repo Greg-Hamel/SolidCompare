@@ -13,7 +13,14 @@ namespace SolidCompare.Entities
 
         public override CompareResult CompareTo(AbstractEntity target)
         {
-            return new CompareResult(CompareResultStatus.NotPerformed);
+            IFeature refFeature = relatedFeature;
+            IFeature modFeature = target.GetRelatedFeature();
+
+            CompareResult result = FeaturePropertyComparator.Instance.Compare(refFeature, modFeature);
+
+            // Deep comparison not implemented yet for BodyFeature
+
+            return new CompareResult(GetID(), result.Status);
         }
     }
 }
