@@ -12,10 +12,20 @@ namespace SolidCompare.Entities
         {
             swMate = relatedFeature.GetSpecificFeature2();
         }
-        
+
         public override CompareResult CompareTo(AbstractEntity target)
         {
-            return new CompareResult(CompareResultStatus.NotPerformed);
+            IFeature refFeature = relatedFeature;
+            IFeature modFeature = target.GetRelatedFeature();
+
+            CompareResult result = FeaturePropertyComparator.Instance.Compare(refFeature, modFeature);
+
+            if (CompareResultStatus.Identical != result.Status)
+            {
+                // Deep Comparison
+            }
+
+            return new CompareResult(GetID(), result.Status);
         }
     }
 }
