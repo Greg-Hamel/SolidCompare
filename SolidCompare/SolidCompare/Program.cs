@@ -11,6 +11,7 @@ using Microsoft.Win32.SafeHandles;
 using SldWorks;
 using SwConst;
 using SolidCompare.Comparators;
+using SolidCompare.Entities;
 
 namespace SolidCompare
 {
@@ -20,6 +21,9 @@ namespace SolidCompare
 
         static void Main()
         {
+            swApp = SwApp.Instance;  // Get SolidWorks
+            swApp.Visible = true;
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Launcher lcher = new Launcher();
@@ -30,19 +34,23 @@ namespace SolidCompare
             string dir1 = lcher.directory1;
             string dir2 = lcher.directory2;
 
-            swApp = SwApp.Instance;  // Get SolidWorks
-            swApp.Visible = true;
-
             // The following is used for testing of this branch only.
 
             // ModelDoc2 Part1 = SwApp.OpenFile(@"C:\Users\hameg\Documents\SWs\A.SLDPRT");
             // ModelDoc2 Part2 = SwApp.OpenFile(@"C:\Users\hameg\Documents\SWs\B.SLDPRT");
 
-            ModelDoc2 Part1 = SwApp.OpenFile(@"C:\Users\ap12770\Documents\part1.sldprt");
-            ModelDoc2 Part2 = SwApp.OpenFile(@"C:\Users\ap12770\Documents\part2.sldprt");
+            // ModelDoc2 Part1 = SwApp.OpenFile(@"C:\Users\ap12770\Documents\part1.sldprt");
+            // ModelDoc2 Part2 = SwApp.OpenFile(@"C:\Users\ap12770\Documents\part2.sldprt");
 
-            VolumeComparator result = new VolumeComparator();
-            result.Compare(Part1, Part2);
+            // VolumeComparator result = new VolumeComparator();
+            // result.Compare(Part1, Part2);
+
+            Assembly refAssembly = new Assembly((IAssemblyDoc)SwApp.OpenFile(dir1));
+            Assembly modAssembly = new Assembly((IAssemblyDoc)SwApp.OpenFile(dir2));
+
+            CompareResult compareResult = refAssembly.CompareTo(modAssembly);
+
+            Console.WriteLine(compareResult);
 
             Logger.EndReport();
             MessageBox.Show("Done");
