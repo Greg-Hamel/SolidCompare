@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using System.Runtime.InteropServices;
 using SldWorks;
 using SwConst;
 
-namespace SolidCompare
+namespace SolidCompare.Comparators
 {
     public class Info
     {
@@ -14,14 +11,14 @@ namespace SolidCompare
         public object Value { get; set; }
     }
 
-    public class VolumeComparator
+    public class VolumeComparator : IComparator<ModelDoc2>
     {
         static Component2 swComp1, swComp2;
         static SldWorks.SldWorks swApp = Program.swApp;
         static Feature mateFeature;
         static Configuration config1, config2, config3;
         static string programFile = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles);
-
+        static string lang = null;
 
         static bool boolstat;
         static string comparePartName;
@@ -32,31 +29,30 @@ namespace SolidCompare
 
         }
 
-        public static void Compare(ModelDoc2 comparer, ModelDoc2 comparee)
+        public CompareResult Compare(ModelDoc2 comparer, ModelDoc2 comparee)
         {
             // This is the main method to execute the rest of the comparison.
             ModelDoc2 component1;
             ModelDoc2 component2;
+
+            int result;
 
             component1 = comparer;
             component2 = comparee;
 
-            StartComparison(component1, component2);
+            result = StartComparison(component1, component2);
+
+            if (result == (int)CompareResultStatus.Equal)
+            {
+                return new CompareResult(CompareResultStatus.Equal);
+            }
+            else
+            {
+                return new CompareResult(CompareResultStatus.Different);
+            }
         }
 
-        public static void Compare(Component2 comparer, Component2 comparee)
-        {
-            // This is the main method to execute the rest of the comparison.
-            ModelDoc2 component1;
-            ModelDoc2 component2;
-
-            component1 = (ModelDoc2)comparer;
-            component2 = (ModelDoc2)comparee;
-
-            StartComparison(component1, component2);
-        }
-
-        static void StartComparison(ModelDoc2 component1, ModelDoc2 component2)
+        static int StartComparison(ModelDoc2 component1, ModelDoc2 component2)
         {
             AssemblyDoc swAsbly;
             int volumeDiff, faceDiff, areaDiff;
@@ -66,6 +62,9 @@ namespace SolidCompare
             ModelDoc2 comparePart;
             int comparisonType;
             double volumeA, volumeB;
+            int result;
+
+            lang = SwApp.GetLang();
 
             Dictionary<string, Info> component1Info;
             Dictionary<string, Info> component2Info;
@@ -106,6 +105,19 @@ namespace SolidCompare
             Logger.Info("Volume B-A: " + aMinusB);
             aAndB = CommonVolume(comparePart, body1, body2);
             Logger.Info("Volume B&A: " + aAndB);
+
+            CloseDocs(new object[] { comparePart });
+
+            result = casefinder(volumeA, volumeB, volumeDiff, faceDiff, areaDiff, aMinusB, bMinusA, aAndB);
+
+            if (result == 8)
+            {
+                return (int)CompareResultStatus.Equal;
+            }
+            else
+            {
+                return (int)CompareResultStatus.Different;
+            }
         }
 
         static Dictionary<string, Info> GetInfo(ModelDoc2 component)
@@ -143,9 +155,10 @@ namespace SolidCompare
             AssemblyDoc newAssembly;
 
             Logger.Info("Creating the assembly...");
-            newAssembly = (AssemblyDoc)swApp.NewDocument(programFile + @"\SOLIDWORKS Corp\SOLIDWORKS\data\templates\assem.asmdot", 0, 0, 0);
+            newAssembly = (AssemblyDoc)swApp.NewDocument(@"C:\ProgramData\SolidWorks\SOLIDWORKS 2017\templates\Assemblage.asmdot", 0, 0, 0);
 
-            AsblyTitle = ((ModelDoc2)newAssembly).GetTitle();
+            // Use the following at home only.
+            // newAssembly = (AssemblyDoc)swApp.NewDocument(SwApp.Instance.GetExecutablePath() +  @"data\templates\assem.asmdot", 0, 0, 0);
 
             if (newAssembly == null)
             {
@@ -155,6 +168,7 @@ namespace SolidCompare
             else
             {
                 Logger.Info("Assembly created.");
+                AsblyTitle = ((ModelDoc2)newAssembly).GetTitle();
                 return newAssembly;
             }
 
@@ -201,8 +215,8 @@ namespace SolidCompare
 
             int mateError;
             string mateName;
-            string firstSelection;
-            string secondSelection;
+            string firstSelection = "";
+            string secondSelection = "";
 
             // Add Component1
             Logger.Info("Adding first component to assembly...");
@@ -243,9 +257,22 @@ namespace SolidCompare
             swModel.ClearSelection();
 
             mateName = "Aligned_Origins";
-            firstSelection = "Point1@Origin@" + comp1Name + "@" + swModel.GetTitle();
-            secondSelection = "Point1@Origin@" + comp2Name + "@" + swModel.GetTitle();
 
+            if (lang == "french")
+            {
+                firstSelection = "Point1@Origine@" + comp1Name + "@" + swModel.GetTitle();
+                secondSelection = "Point1@Origine@" + comp2Name + "@" + swModel.GetTitle();
+            }
+            else if (lang == "english")
+            {
+                firstSelection = "Point1@Origin@" + comp1Name + "@" + swModel.GetTitle();
+                secondSelection = "Point1@Origin@" + comp2Name + "@" + swModel.GetTitle();
+            }
+            else
+            {
+                Logger.Error("VolumeComparator.cs", "InsertComponents()", "Could not create mate since language is not recognized.");
+            }
+            
             boolstat = swDocExt.SelectByID2(firstSelection, "EXTSKETCHPOINT", 0, 0, 0, false, 1, null, 0);
             boolstat = swDocExt.SelectByID2(secondSelection, "EXTSKETCHPOINT", 0, 0, 0, true, 1, null, 0);
 
@@ -268,11 +295,20 @@ namespace SolidCompare
 
             mateName = "Aligned_Top";
 
-            firstSelection = "Top@" + comp1Name + "@" + swModel.GetTitle();
-            secondSelection = "Top@" + comp2Name + "@" + swModel.GetTitle();
-
-            Logger.Info(firstSelection);
-            Logger.Info(secondSelection);
+            if (lang == "french")
+            {
+                firstSelection = "Plan de dessus@" + comp1Name + "@" + swModel.GetTitle();
+                secondSelection = "Plan de dessus@" + comp2Name + "@" + swModel.GetTitle();
+            }
+            else if (lang == "english")
+            {
+                firstSelection = "Top@" + comp1Name + "@" + swModel.GetTitle();
+                secondSelection = "Top@" + comp2Name + "@" + swModel.GetTitle();
+            }
+            else
+            {
+                Logger.Error("VolumeComparator.cs", "InsertComponents()", "Could not create mate since language is not recognized.");
+            }
 
             boolstat = swDocExt.SelectByID2(firstSelection, "PLANE", 0, 0, 0, false, 1, null, 0);
             boolstat = swDocExt.SelectByID2(secondSelection, "PLANE", 0, 0, 0, true, 1, null, 0);
@@ -303,9 +339,22 @@ namespace SolidCompare
             swModel.ClearSelection();
 
             mateName = "Aligned_Front";
-            firstSelection = "Front@" + comp1Name + "@" + swModel.GetTitle();
-            secondSelection = "Front@" + comp2Name + "@" + swModel.GetTitle();
 
+            if (lang == "french")
+            {
+                firstSelection = "Plan de face@" + comp1Name + "@" + swModel.GetTitle();
+                secondSelection = "Plan de face@" + comp2Name + "@" + swModel.GetTitle();
+            }
+            else if (lang == "english")
+            {
+                firstSelection = "Front@" + comp1Name + "@" + swModel.GetTitle();
+                secondSelection = "Front@" + comp2Name + "@" + swModel.GetTitle();
+            }
+            else
+            {
+                Logger.Error("VolumeComparator.cs", "InsertComponents()", "Could not create mate since language is not recognized.");
+            }
+            
             boolstat = swDocExt.SelectByID2(firstSelection, "PLANE", 0, 0, 0, false, 1, null, 0);
             boolstat = swDocExt.SelectByID2(secondSelection, "PLANE", 0, 0, 0, true, 1, null, 0);
 

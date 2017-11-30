@@ -10,6 +10,7 @@ using System.Text;
 using Microsoft.Win32.SafeHandles;
 using SldWorks;
 using SwConst;
+using SolidCompare.Comparators;
 
 namespace SolidCompare
 {
@@ -37,11 +38,11 @@ namespace SolidCompare
             // ModelDoc2 Part1 = SwApp.OpenFile(@"C:\Users\hameg\Documents\SWs\A.SLDPRT");
             // ModelDoc2 Part2 = SwApp.OpenFile(@"C:\Users\hameg\Documents\SWs\B.SLDPRT");
 
-            ModelDoc2 Part1 = SwApp.OpenFile(@"C:\Users\hameg\Documents\SWs\Assemblies\Ass1.SLDASM");
-            ModelDoc2 Part2 = SwApp.OpenFile(@"C:\Users\hameg\Documents\SWs\Assemblies\Ass2.SLDASM");
+            ModelDoc2 Part1 = SwApp.OpenFile(@"C:\Users\ap12770\Documents\part1.sldprt");
+            ModelDoc2 Part2 = SwApp.OpenFile(@"C:\Users\ap12770\Documents\part2.sldprt");
 
-            VolumeComparator.Compare(Part1, Part2);
-
+            VolumeComparator result = new VolumeComparator();
+            result.Compare(Part1, Part2);
 
             Logger.EndReport();
             MessageBox.Show("Done");
