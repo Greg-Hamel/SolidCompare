@@ -42,9 +42,9 @@ namespace SolidCompare.Comparators
 
             result = StartComparison(component1, component2);
 
-            if (result == (int)CompareResultStatus.Equal)
+            if (result == (int)CompareResultStatus.Identical)
             {
-                return new CompareResult(CompareResultStatus.Equal);
+                return new CompareResult(CompareResultStatus.Identical);
             }
             else
             {
@@ -106,13 +106,13 @@ namespace SolidCompare.Comparators
             aAndB = CommonVolume(comparePart, body1, body2);
             Logger.Info("Volume B&A: " + aAndB);
 
-            CloseDocs(new object[] { comparePart });
+            // CloseDocs(new object[] { comparePart });
 
             result = casefinder(volumeA, volumeB, volumeDiff, faceDiff, areaDiff, aMinusB, bMinusA, aAndB);
 
             if (result == 8)
             {
-                return (int)CompareResultStatus.Equal;
+                return (int)CompareResultStatus.Identical;
             }
             else
             {
@@ -514,6 +514,9 @@ namespace SolidCompare.Comparators
             double a_volume = (a.GetMassProperties(0))[3];
             double b_volume = (b.GetMassProperties(0))[3];
 
+            a_volume = Math.Round(a_volume, 8);
+            b_volume = Math.Round(b_volume, 8);
+
             Logger.Info("Inserting a Combine Feature: Substraction...");
             partFeature = partFeatureMgr.InsertCombineFeature((int)swBodyOperationType_e.SWBODYCUT, a, bodies_array);
             if (partFeature == null)
@@ -525,6 +528,8 @@ namespace SolidCompare.Comparators
                 }
                 else
                 {
+                    Logger.Warn("Volume A: " + a_volume +
+                        "\nVolume B: " + b_volume);
                     Logger.Error("VolumeComparator", "SubstractVolume", "Could not create Feature");
                 }
             }
@@ -564,6 +569,9 @@ namespace SolidCompare.Comparators
             bool suppression;
             double a_volume = (a.GetMassProperties(0))[3];
             double b_volume = (b.GetMassProperties(0))[3];
+
+            a_volume = Math.Round(a_volume, 8);
+            b_volume = Math.Round(b_volume, 8);
 
             Logger.Info("Inserting a Combine Feature: Intersection...");
             partFeature = partFeatureMgr.InsertCombineFeature((int)swBodyOperationType_e.SWBODYINTERSECT, null, bodies_array);
@@ -726,7 +734,7 @@ namespace SolidCompare.Comparators
                 // Removed hole and extrusion
                 return 7;
             }
-            else if (volumedifference == 0 && areadifference == 0 && facedifference == 0  && amb > 0 && bma > 0 && anb == volumeA && anb == volumeB)
+            else if (volumedifference == 0 && areadifference == 0 && facedifference == 0  && amb == 0 && bma == 0 && anb == volumeA && anb == volumeB)
             {
                 // Parts are the same
                 return 8;
