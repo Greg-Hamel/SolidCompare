@@ -170,5 +170,14 @@ namespace SolidCompare
 
             return swActivatedModel;
         }
+
+        public static string GetLang()
+        {
+            string lang;
+
+            lang = instance.GetCurrentLanguage();
+
+            return lang;
+        }
     }
 }
