@@ -72,8 +72,8 @@ namespace SolidCompare.Comparators
                 component2 = Convert2Part(component2, component2Info);
             }
 
-            Logger.Info("Comparing '" + component1Info["Name"] + "' with '" + component2Info["Name"]);
-            Program.report.AddDelayedSubSection("'" + component1Info["Title"] + "' & '" + component2Info["Title"]);
+            Logger.Info("Comparing '" + component1Info["Name"].Value + "' with '" + component2Info["Name"].Value + "'");
+            Program.report.AddDelayedSubSection("'" + component1Info["Title"].Value + "' & '" + component2Info["Title"].Value + "'");
 
             swAsbly = CreateAssembly();
             InsertComponents(swAsbly, component1, component2);
