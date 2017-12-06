@@ -10,38 +10,56 @@ using System.Text;
 using Microsoft.Win32.SafeHandles;
 using SldWorks;
 using SwConst;
+using SolidCompare.Comparators;
+using SolidCompare.Entities;
 
 namespace SolidCompare
 {
     static class Program
     {
         public static SldWorks.SldWorks swApp;
+        public static Reporter report;
 
+        [STAThread]
         static void Main()
         {
+            swApp = SwApp.Instance;  // Get SolidWorks
+            swApp.Visible = true;
+
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Launcher lcher = new Launcher();
             Logger.Info("SolidCompare Started");
             Application.Run(lcher);
             Logger.Info("Launcher closed.");
+            
 
             string dir1 = lcher.directory1;
             string dir2 = lcher.directory2;
 
-            swApp = SwApp.Instance;  // Get SolidWorks
+            report = new Reporter(SwApp.StripFile(dir1));
 
-            // The following is used for testing of this branch only.
+            List<ModelDoc2> previousDocs = SwApp.ListCurrentlyOpened();
 
-            ModelDoc2 Part1 = SwApp.OpenFile(@"C:\Users\hameg\Documents\SWs\A.SLDPRT");
-            ModelDoc2 Part2 = SwApp.OpenFile(@"C:\Users\hameg\Documents\SWs\B.SLDPRT");
+            Assembly refAssembly = new Assembly((IAssemblyDoc)SwApp.OpenFile(dir1));
+            Assembly modAssembly = new Assembly((IAssemblyDoc)SwApp.OpenFile(dir2));
 
-            VolumeComparator.Compare(Part1, Part2);
+            report.AddComparison(refAssembly.Title, modAssembly.Title);
 
+            CompareResult compareResult = refAssembly.CompareTo(modAssembly);
+
+            Console.WriteLine(compareResult);
+
+            report.AddSection("Assembly Comparison");
+            report.AddSubSection("Reported Changes");
+            report.AddLine(compareResult.ToString());
+            report.AddSection("Volumetric Comparison");
+            report.PrintDelayed();
 
             Logger.EndReport();
+            SwApp.Cleanup(previousDocs);
             MessageBox.Show("Done");
         }
-
     }
 }

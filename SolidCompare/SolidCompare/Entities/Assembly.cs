@@ -15,6 +15,11 @@ namespace SolidCompare.Entities
         private List<Mate> mates = new List<Mate>();
         private List<BodyFeature> bodyFeatures = new List<BodyFeature>();
 
+        public string Title
+        {
+            get { return ((ModelDoc2)swAssembly).GetTitle(); }
+        }
+
         public Assembly(IAssemblyDoc swAssembly) : this(swAssembly, null)
         {
 
@@ -104,10 +109,11 @@ namespace SolidCompare.Entities
             CompareResult matesComparison = ListComparator.Instance.Compare(mates.Cast<AbstractEntity>().ToList(), ((Assembly)target).GetMates().Cast<AbstractEntity>().ToList());
             CompareResult bodyFeaturesComparison = ListComparator.Instance.Compare(bodyFeatures.Cast<AbstractEntity>().ToList(), ((Assembly)target).GetBodyFeatures().Cast<AbstractEntity>().ToList());
             CompareResult subAssembliesComparison = ListComparator.Instance.Compare(subAssemblies.Cast<AbstractEntity>().ToList(), ((Assembly)target).GetSubAssemblies().Cast<AbstractEntity>().ToList());
+            CompareResult geometricComparison = new VolumeComparator().Compare((ModelDoc2)this.swAssembly, (ModelDoc2)((Assembly)target).swAssembly);
 
             status = (CompareResultStatus)Math.Max((int)status, (int)partsComparison.Status);
 
-            return partsComparison.Merge(matesComparison).Merge(bodyFeaturesComparison).Merge(subAssembliesComparison);
+            return partsComparison.Merge(matesComparison).Merge(bodyFeaturesComparison).Merge(subAssembliesComparison).Merge(geometricComparison);
 
         }
 

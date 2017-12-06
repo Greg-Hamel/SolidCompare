@@ -15,6 +15,19 @@ namespace SolidCompare.Comparators
         Different = 2,
     }
 
+    public enum VolumeCompareResultStatus
+    {
+        Unknown = -1,
+        MovedFeature = 1,
+        NewExtrusion = 2,
+        RemovedExtrusion = 3,
+        NewHole = 4,
+        RemovedHole = 5,
+        NewHoldAndExtrusion= 6,
+        RemovedHoleAndExtrusion = 7,
+        Identical = 8,
+    }
+
     public class CompareResult
     {
         private int comparedId = -1;
