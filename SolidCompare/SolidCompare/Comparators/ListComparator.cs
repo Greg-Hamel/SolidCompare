@@ -36,6 +36,7 @@ namespace SolidCompare.Comparators
 
             foreach (AbstractEntity referenceEntityToCompare in referenceList)
             {
+
                 AbstractEntity modifiedEntityToCompare = modifiedList.Find(x => x.GetID() == referenceEntityToCompare.GetID());
 
                 if (modifiedEntityToCompare != null)

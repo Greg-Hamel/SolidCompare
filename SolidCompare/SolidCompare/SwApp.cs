@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Collections.Generic;
 using SldWorks;
 using SwConst;
 using SWUtilities;
@@ -101,6 +102,11 @@ namespace SolidCompare
              * IModelDoc2 if it is a part, assembly or 
              * anything else that can be loaded. */
 
+            if (fileName == null)
+            {
+                Logger.Error("SwApp.cs", "OpenFile()", "The filename provided is null");
+            }
+
             ModelDoc2 swModel = default(ModelDoc2);
             IDocumentSpecification swDocSpecification = default(DocumentSpecification);
             int errors = 0;
@@ -178,6 +184,78 @@ namespace SolidCompare
             lang = instance.GetCurrentLanguage();
 
             return lang;
+        }
+
+        public static void Cleanup(List<ModelDoc2> previousDocs)
+        {
+            List<ModelDoc2> currentDocs = ListCurrentlyOpened();
+            List<ModelDoc2> toBeClosed = new List<ModelDoc2>();
+            foreach (ModelDoc2 Doc in currentDocs)
+            {
+                if (!previousDocs.Contains(Doc))
+                {
+                    toBeClosed.Add(Doc);
+                }
+                else { /* pass */ }
+            }
+            Logger.Info(currentDocs.Count + " documents open.");
+            Logger.Info(toBeClosed.Count + " documents to be closed.");
+            CloseDocs(toBeClosed);
+            Logger.Info(ListCurrentlyOpened().Count + " documents left open.");
+
+            if (ListCurrentlyOpened().Count != (currentDocs.Count - toBeClosed.Count))
+            {
+                Logger.Warn("Not all documents were closed as expected...");
+            }
+            else { Logger.Info("Clean-Up completed successfully."); }
+
+        }
+
+        public static List<ModelDoc2> ListCurrentlyOpened()
+        {
+            List<ModelDoc2> openedDocs = new List<ModelDoc2>();
+
+            ModelDoc2 swModel = Instance.GetFirstDocument();
+            while (swModel != null)
+            {
+                /* Assembly components are opened, but are not visible
+                 * until opened by the user */
+                // Debug.WriteLine(swModel.GetTitle() + " [" + swModel.GetType() + "]");
+
+                /* The document name contains a filename extension
+                * if the document has been saved
+                * and is subject to Microsoft Windows Explorer setting;
+                * the document name does not contain a
+                * filename extension if the document has not been saved;
+                * ModelDoc2::GetPathName is blank until the file is saved */
+
+                openedDocs.Add(swModel);
+                swModel = swModel.GetNext();
+            }
+
+            return openedDocs;
+        }
+
+        public static void CloseDocs(List<ModelDoc2> docs)
+        {
+            foreach (ModelDoc2 doc in docs)
+            {
+                try
+                {
+                    Instance.CloseDoc(doc.GetTitle());
+                }
+                catch
+                {
+                    Logger.Error("SwApp.cs", "CloseDocs()", "One of the provided documents cannot be converted to ModelDoc2");
+                }
+            }
+        }
+
+        public static string StripFile(string filepath)
+        {
+            int index = filepath.LastIndexOf("\\");
+
+            return filepath.Substring(0, index);
         }
     }
 }

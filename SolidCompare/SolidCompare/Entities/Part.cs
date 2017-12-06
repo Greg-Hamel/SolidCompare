@@ -28,18 +28,36 @@ namespace SolidCompare.Entities
 
         public override CompareResult CompareTo(AbstractEntity target)
         {
-            IModelDoc2 refPartDoc = (IModelDoc2)SwPart;
-            IModelDoc2 modPartDoc = (IModelDoc2)((Part)target).SwPart;
-            
-            CompareResult result = DocumentPropertyComparator.Instance.Compare(refPartDoc, modPartDoc);
+            ModelDoc2 refPartDoc = (ModelDoc2)SwPart;
+            ModelDoc2 modPartDoc = (ModelDoc2)((Part)target).SwPart;
+
+            CompareResult nomenclatureResult = DocumentPropertyComparator.Instance.Compare(refPartDoc, modPartDoc);
             // Console.WriteLine(" +++++ Part " + targetPartDoc.GetPathName() + " --- " + result);
 
-            if (CompareResultStatus.Identical != result.Status)
-            {
-                // Deep Comparison
-            }
+            // Deep Comparison
+            CompareResult geometricResult = new VolumeComparator().Compare(refPartDoc, modPartDoc);
 
-            return new CompareResult(GetID(), result.Status);
+            if (nomenclatureResult.Status == CompareResultStatus.Identical && geometricResult.Status == CompareResultStatus.Identical)
+            {
+                return new CompareResult(GetID(), CompareResultStatus.Identical);
+            }
+            else if (nomenclatureResult.Status == CompareResultStatus.Identical && geometricResult.Status == CompareResultStatus.Different)
+            {
+                return new CompareResult(GetID(), CompareResultStatus.Similar);
+            }
+            else if (nomenclatureResult.Status == CompareResultStatus.Similar && geometricResult.Status == CompareResultStatus.Identical)
+            {
+                return new CompareResult(GetID(), CompareResultStatus.Identical);
+            }
+            else if (nomenclatureResult.Status == CompareResultStatus.Similar && geometricResult.Status == CompareResultStatus.Different)
+            {
+                return new CompareResult(GetID(), CompareResultStatus.Different);
+            }
+            else
+            {
+                Logger.Warn("Parts Comparison has returned an unexpected value.");
+                return new CompareResult(GetID(), CompareResultStatus.NotPerformed);
+            }
         }
 
     }

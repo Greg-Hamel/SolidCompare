@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using SldWorks;
+﻿using SldWorks;
 using SwConst;
+using System;
+using System.Collections.Generic;
 
 namespace SolidCompare.Comparators
 {
@@ -35,24 +35,17 @@ namespace SolidCompare.Comparators
             ModelDoc2 component1;
             ModelDoc2 component2;
 
-            int result;
+            CompareResultStatus result;
 
             component1 = comparer;
             component2 = comparee;
 
             result = StartComparison(component1, component2);
 
-            if (result == (int)CompareResultStatus.Equal)
-            {
-                return new CompareResult(CompareResultStatus.Equal);
-            }
-            else
-            {
-                return new CompareResult(CompareResultStatus.Different);
-            }
+            return new CompareResult(result);
         }
 
-        static int StartComparison(ModelDoc2 component1, ModelDoc2 component2)
+        static CompareResultStatus StartComparison(ModelDoc2 component1, ModelDoc2 component2)
         {
             AssemblyDoc swAsbly;
             int volumeDiff, faceDiff, areaDiff;
@@ -62,7 +55,8 @@ namespace SolidCompare.Comparators
             ModelDoc2 comparePart;
             int comparisonType;
             double volumeA, volumeB;
-            int result;
+            VolumeCompareResultStatus result;
+            bool cgAligned;
 
             lang = SwApp.GetLang();
 
@@ -78,16 +72,26 @@ namespace SolidCompare.Comparators
                 component2 = Convert2Part(component2, component2Info);
             }
 
+            Logger.Info("Comparing '" + component1Info["Name"].Value + "' with '" + component2Info["Name"].Value + "'");
+            Program.report.AddDelayedSubSection("'" + component1Info["Title"].Value + "' & '" + component2Info["Title"].Value + "'");
 
             swAsbly = CreateAssembly();
             InsertComponents(swAsbly, component1, component2);
             SaveAsPart(swAsbly, component1Info, component2Info);
-            CloseDocs(new object[] { swAsbly, component1, component2 });
+            cgAligned = CheckCG(component1, component2);
+            if (!cgAligned)
+            {
+                Logger.Warn("CG has moved by more than 10%");
+                Program.report.AddDelayedLine("CG has moved by more than 10%");
+            }
+            // CloseDocs(new object[] { swAsbly, component1, component2 });
 
             comparePart = SwApp.OpenFile(comparePartPath);
             bodies = ((PartDoc)comparePart).GetBodies2((int)swBodyType_e.swSolidBody, true);
             body1 = (Body2)bodies[0];
             body2 = (Body2)bodies[1];
+
+            
 
             volumeA = (body1.GetMassProperties(0))[3];
             volumeB = (body2.GetMassProperties(0))[3];
@@ -98,25 +102,38 @@ namespace SolidCompare.Comparators
             Logger.Info("Volume Compare:\t" + volumeDiff);
             Logger.Info("Area Compare:\t" + areaDiff);
             Logger.Info("Faces Compare:\t" + faceDiff);
+            Program.report.AddDelayedLine("Volume Compare:\t" + volumeDiff);
+            Program.report.AddDelayedLine("Area Compare:\t" + areaDiff);
+            Program.report.AddDelayedLine("Faces Compare:\t" + faceDiff);
 
             aMinusB = SubstractVolume(comparePart, body1, body2);
             Logger.Info("Volume A-B: " + aMinusB);
+            Program.report.AddDelayedLine("Volume A-B:\t\t" + aMinusB);
             bMinusA = SubstractVolume(comparePart, body2, body1);
             Logger.Info("Volume B-A: " + aMinusB);
+            Program.report.AddDelayedLine("Volume B-A:\t\t" + aMinusB);
             aAndB = CommonVolume(comparePart, body1, body2);
             Logger.Info("Volume B&A: " + aAndB);
+            Program.report.AddDelayedLine("Volume B&A:\t\t" + aAndB);
 
-            CloseDocs(new object[] { comparePart });
+            // CloseDocs(new object[] { comparePart });
 
             result = casefinder(volumeA, volumeB, volumeDiff, faceDiff, areaDiff, aMinusB, bMinusA, aAndB);
 
-            if (result == 8)
+            if (result == VolumeCompareResultStatus.Identical && cgAligned)
             {
-                return (int)CompareResultStatus.Equal;
+                Logger.Info("Geometric result: Identical");
+                return CompareResultStatus.Identical;
+            }
+            else if (!cgAligned)
+            {
+                Logger.Info("Geometric result: Similar");
+                return CompareResultStatus.Similar;
             }
             else
             {
-                return (int)CompareResultStatus.Different;
+                Logger.Info("Geometric result: Different");
+                return CompareResultStatus.Different;
             }
         }
 
@@ -149,12 +166,83 @@ namespace SolidCompare.Comparators
             return infoDict;
         }
 
+        static bool CheckCG(ModelDoc2 comp1, ModelDoc2 comp2)
+        {
+            // Returns True if CGs are aligned
+            // Returns False if CGs are not aligned by 10% over their original position.
+            ModelDocExtension ext1, ext2;
+            double cg1x, cg1y, cg1z, cg2x, cg2y, cg2z, cgDeltaX, cgDeltaY, cgDeltaZ;
+            int errors = 0;
+
+            ext1 = comp1.Extension;
+            ext2 = comp2.Extension;
+
+
+            cg1x = (ext1.GetMassProperties2(0, out errors, false))[0];
+            cg1y = (ext1.GetMassProperties2(0, out errors, false))[1];
+            cg1z = (ext1.GetMassProperties2(0, out errors, false))[2];
+
+            cg2x = (ext2.GetMassProperties2(0, out errors, false))[0];
+            cg2y = (ext2.GetMassProperties2(0, out errors, false))[1];
+            cg2z = (ext2.GetMassProperties2(0, out errors, false))[2];
+
+            cgDeltaX = Math.Abs(cg1x - cg2x);
+            cgDeltaY = Math.Abs(cg1y - cg2y);
+            cgDeltaZ = Math.Abs(cg1z - cg2z);
+
+
+            if (comp1.GetType() == (int)swDocumentTypes_e.swDocASSEMBLY)
+            {
+                if ((cgDeltaX / cg1x) > 0.1)
+                {
+                    return false;
+                }
+                else if ((cgDeltaY / cg1y) > 0.1)
+                {
+                    return false;
+                }
+                else if ((cgDeltaZ / cg1z) > 0.1)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else if (comp1.GetType() == (int)swDocumentTypes_e.swDocPART)
+            {
+                if ((cgDeltaX / cg1x) > 0.1)
+                {
+                    return false;
+                }
+                else if ((cgDeltaY / cg1y) > 0.1)
+                {
+                    return false;
+                }
+                else if ((cgDeltaZ / cg1z) > 0.1)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        
+            else
+            {
+                Logger.Error("VolumeComparator.cs", "CheckCG()", "Unexpected Document type received. Document was of swDocumentTypes_e = " + comp1.GetType());
+                return false;
+            }
+
+        }
+
         static AssemblyDoc CreateAssembly()
         {
             string AsblyTitle;
             AssemblyDoc newAssembly;
 
-            Logger.Info("Creating the assembly...");
             newAssembly = (AssemblyDoc)swApp.NewDocument(@"C:\ProgramData\SolidWorks\SOLIDWORKS 2017\templates\Assemblage.asmdot", 0, 0, 0);
 
             // Use the following at home only.
@@ -163,11 +251,10 @@ namespace SolidCompare.Comparators
             if (newAssembly == null)
             {
                 Logger.Warn("Assembly document creation was unsuccessful.");
-                return null;
+                return newAssembly;
             }
             else
             {
-                Logger.Info("Assembly created.");
                 AsblyTitle = ((ModelDoc2)newAssembly).GetTitle();
                 return newAssembly;
             }
@@ -177,7 +264,6 @@ namespace SolidCompare.Comparators
         static int CheckComponents(ModelDoc2 component1, Dictionary<string, Info> comp1Info, ModelDoc2 component2, Dictionary<string, Info> comp2Info)
         {
             
-            Logger.Info("Components are being verified...");
             if ((int)comp1Info["Type"].Value == (int)swDocumentTypes_e.swDocASSEMBLY || (int)comp2Info["Type"].Value == (int)swDocumentTypes_e.swDocASSEMBLY)
             {
                 Logger.Info("Components are both of Assembly Type");
@@ -219,7 +305,6 @@ namespace SolidCompare.Comparators
             string secondSelection = "";
 
             // Add Component1
-            Logger.Info("Adding first component to assembly...");
             swComp1 = assembly.AddComponent5(component1.GetPathName(), (int)swAddComponentConfigOptions_e.swAddComponentConfigOptions_CurrentSelectedConfig, "",
                 false, "", 0, 0, 0);
 
@@ -231,11 +316,10 @@ namespace SolidCompare.Comparators
             }
             else
             {
-                Logger.Info("Component added successfully.");
+                // Logger.Info("Component added successfully.");
             }
 
             // Add Component2
-            Logger.Info("Adding second component to assembly...");
             swComp2 = assembly.AddComponent5(component2.GetPathName(), (int)swAddComponentConfigOptions_e.swAddComponentConfigOptions_CurrentSelectedConfig, "",
                 false, "", 0, 0, 0);
 
@@ -247,12 +331,11 @@ namespace SolidCompare.Comparators
             }
             else
             {
-                Logger.Info("Component added successfully.");
+                // Logger.Info("Component added successfully.");
             }
 
 
             // Add Mate 1
-            Logger.Info("Adding Origin Mate...");
 
             swModel.ClearSelection();
 
@@ -285,11 +368,8 @@ namespace SolidCompare.Comparators
             mateFeature.Name = mateName;
 
             swModel.ClearSelection();
-            Logger.Info("Mate added: " + mateFeature.Name);
 
             // Add Mate 2
-
-            Logger.Info("Adding Top Plane Mate...");
 
             swModel.ClearSelection();
 
@@ -330,11 +410,9 @@ namespace SolidCompare.Comparators
             mateFeature.Name = mateName;
 
             swModel.ClearSelection();
-            Logger.Info("Mate added: " + mateFeature.Name);
 
             // Add Mate 3
 
-            Logger.Info("Adding Front Plane Mate...");
 
             swModel.ClearSelection();
 
@@ -375,7 +453,6 @@ namespace SolidCompare.Comparators
             mateFeature.Name = mateName;
 
             swModel.ClearSelection();
-            Logger.Info("Mate added: " + mateFeature.Name);
 
         }
 
@@ -396,7 +473,7 @@ namespace SolidCompare.Comparators
             else if (warnings != 0) { Logger.Warn("swFileSaveWarning: " + warnings); }
             else
             {
-                Logger.Info("Save successful.");
+                // Logger.Info("Save successful.");
             }
         }
 
@@ -422,8 +499,8 @@ namespace SolidCompare.Comparators
             assemblyPartName = assemblyInfo["Name"].Value + "_PartConversion.sldprt";
             assemblyPartPath = assemblyInfo["Folder"].Value + assemblyPartName;
 
-            Logger.Info("Saving Assembly as '.SLDPRT'...");
-            Logger.Info("More Specifically: " + assemblyPartPath);
+            // Logger.Info("Saving Assembly as '.SLDPRT'...");
+            // Logger.Info("More Specifically: " + assemblyPartPath);
 
             swApp.ActivateDoc3((string)assemblyInfo["Title"].Value, true, (int)swRebuildOnActivation_e.swRebuildActiveDoc, ref errors);
 
@@ -433,11 +510,11 @@ namespace SolidCompare.Comparators
             else if (warnings != 0) { Logger.Warn("swFileSaveWarning: " + warnings); }
             else if (check)
             {
-                Logger.Info("Save successful.");
+                // Logger.Info("Save successful.");
             }
             else { Logger.Error("VolumeComparator", "SaveAsPart", "Couldn't save for unknown reason."); }
 
-            CloseDocs(new object[] { assembly });
+            // CloseDocs(new object[] { assembly });
 
             convertedAssembly = SwApp.OpenFile(assemblyPartPath);
 
@@ -453,7 +530,7 @@ namespace SolidCompare.Comparators
                 bodies[i] = (Body2)bodies_array[i];
             }
 
-            Logger.Info("Combining all bodies together...");
+            // Logger.Info("Combining all bodies together...");
             partFeature = partFeatureMgr.InsertCombineFeature((int)swBodyOperationType_e.SWBODYADD, null, bodies);
             if (partFeature == null)
             {
@@ -484,7 +561,7 @@ namespace SolidCompare.Comparators
 
         static void CreateConfigurations(ModelDoc2 comparePart, string component1Name, string component2Name)
         {
-            Logger.Info("Creating three (3) configurations...");
+            // Logger.Info("Creating three (3) configurations...");
             config1 = comparePart.AddConfiguration3(component1Name + "_minus_"+ component2Name, 
                 "Substraction of body1 minus body2", "", (int)swConfigurationOptions2_e.swConfigOption_DontActivate);
             config2 = comparePart.AddConfiguration3(component2Name + "_minus_" + component1Name,
@@ -494,7 +571,7 @@ namespace SolidCompare.Comparators
 
             if (config1 != null || config2 != null | config3 != null)
             {
-                Logger.Info("All configurations created successfully.");
+                // Logger.Info("All configurations created successfully.");
             }
             else
             {
@@ -511,10 +588,13 @@ namespace SolidCompare.Comparators
             Body2[] bodies_array = new Body2[] { b };
             double[] bodyproperties;
             bool suppression;
-            double a_volume = (a.GetMassProperties(0))[3];
-            double b_volume = (b.GetMassProperties(0))[3];
+            double a_volume = Math.Round((a.GetMassProperties(0))[3], 8);
+            double b_volume = Math.Round((b.GetMassProperties(0))[3], 8);
 
-            Logger.Info("Inserting a Combine Feature: Substraction...");
+            a_volume = Math.Round(a_volume, 8);
+            b_volume = Math.Round(b_volume, 8);
+
+           //  Logger.Info("Inserting a Combine Feature: Substraction...");
             partFeature = partFeatureMgr.InsertCombineFeature((int)swBodyOperationType_e.SWBODYCUT, a, bodies_array);
             if (partFeature == null)
             {
@@ -525,10 +605,12 @@ namespace SolidCompare.Comparators
                 }
                 else
                 {
+                    Logger.Warn("Volume A: " + a_volume +
+                        "\nVolume B: " + b_volume);
                     Logger.Error("VolumeComparator", "SubstractVolume", "Could not create Feature");
                 }
             }
-            Logger.Info("New Combine Feature added.");
+            // Logger.Info("New Combine Feature added.");
 
             localBodies = ((PartDoc)comparePart).GetBodies2((int)swBodyType_e.swSolidBody, true);
 
@@ -565,14 +647,17 @@ namespace SolidCompare.Comparators
             double a_volume = (a.GetMassProperties(0))[3];
             double b_volume = (b.GetMassProperties(0))[3];
 
-            Logger.Info("Inserting a Combine Feature: Intersection...");
+            a_volume = Math.Round(a_volume, 8);
+            b_volume = Math.Round(b_volume, 8);
+
+            // Logger.Info("Inserting a Combine Feature: Intersection...");
             partFeature = partFeatureMgr.InsertCombineFeature((int)swBodyOperationType_e.SWBODYINTERSECT, null, bodies_array);
             if (partFeature == null)
             {
                 Logger.Warn("No Intersection found between the provided bodies");
                 return 0;  // Zero Volume
             }
-            Logger.Info("New Combine Feature added.");
+            // Logger.Info("New Combine Feature added.");
 
             localBodies = ((PartDoc)comparePart).GetBodies2((int)swBodyType_e.swSolidBody, true);
 
@@ -587,7 +672,7 @@ namespace SolidCompare.Comparators
             if (suppression == true)
             {
                 comparePart.Save();
-                return totalBodyVolume;  // returns the yielded volume
+                return Math.Round(totalBodyVolume, 8);  // returns the yielded volume
             }
             else
             {
@@ -611,6 +696,7 @@ namespace SolidCompare.Comparators
             body2Volume = Math.Round(body2MassProp[3], 8);
 
             Logger.Info("Volume A:" + body1Volume + "\tVolume B:" + body2Volume);
+            Program.report.AddDelayedLine("Volume A:\t\t" + body1Volume + "\tVolume B:\t" + body2Volume);
 
             return IncDecDoubleReport(body1Volume, body2Volume, "CompareVolume()");
         }
@@ -628,6 +714,7 @@ namespace SolidCompare.Comparators
 
 
             Logger.Info("Faces A:" + body1Faces + "\tFaces B:" + body2Faces);
+            Program.report.AddDelayedLine("Faces A:\t\t" + body1Faces + "\t\tFaces B:\t" + body2Faces);
 
             return IncDecIntReport(body1Faces, body2Faces, "CompareFaces()");
         }
@@ -661,6 +748,7 @@ namespace SolidCompare.Comparators
             body2Area = Math.Round(body2Area, 8);
 
             Logger.Info("Area A:" + body1Area + "\tArea B:" + body2Area);
+            Program.report.AddDelayedLine("Area A:\t\t" + body1Area + "\t\tArea B:\t\t" + body2Area);
 
             return IncDecDoubleReport(body1Area, body2Area, "CompareArea()");
         }
@@ -689,51 +777,55 @@ namespace SolidCompare.Comparators
             }
         }
 
-        static int casefinder(double volumeA, double volumeB, int volumedifference, int facedifference, int areadifference, double amb, double bma, double anb)
+        static VolumeCompareResultStatus casefinder(double volumeA, double volumeB, int volumedifference, int facedifference, int areadifference, double amb, double bma, double anb)
         {
             if (volumedifference == 0 && areadifference == 0 && amb > 0 && bma > 0 && anb > 0)
             {
-                // Moved Feature
-                return 1;
+                Program.report.AddDelayedLine("Volumetric Analysis Result: This contains a moved Feature.");
+                return VolumeCompareResultStatus.MovedFeature;
             }
             else if (volumedifference == 2 && areadifference == 2 && (facedifference == 0 || facedifference == 2) && amb == 0 && bma > 0 && anb == volumeA)
             {
-                // New Extrusion
-                return 2;
+                Program.report.AddDelayedLine("Volumetric Analysis Result: This contains a new Extrusion.");
+                return VolumeCompareResultStatus.NewExtrusion;
             }
             else if (volumedifference == 1 && areadifference == 1 && (facedifference == 0 || facedifference == 1) && amb > 0 && bma == 0 && anb == volumeB)
             {
-                // Removed Extrusion
-                return 3;
+                Program.report.AddDelayedLine("Volumetric Analysis Result: This contains a removed Extrusion");
+                return VolumeCompareResultStatus.RemovedExtrusion;
             }
             else if (volumedifference == 1 && facedifference == 2 && amb > 0 && bma == 0 && anb == volumeB)
             {
-                // New Hole
-                return 4;
+                Program.report.AddDelayedLine("Volumetric Analysis Result: This contains a new Hole");
+                return VolumeCompareResultStatus.NewHole;
             }
             else if (volumedifference == 2 && facedifference == 1 && amb == 0 && bma > 0 && anb == volumeA)
             {
-                // Removed Hole
-                return 5;
+                Program.report.AddDelayedLine("Volumetric Analysis Result: This contains a removed Hole"); 
+                return VolumeCompareResultStatus.RemovedHole;
             }
             else if (facedifference == 2 && amb > 0 && bma > 0 && anb != volumeA && anb != volumeB)
             {
-                // New Hole and Extrusion
-                return 6;
+                Program.report.AddDelayedLine("Volumetric Analysis Result: This contains a new Extrusion and a new Hole");
+                return VolumeCompareResultStatus.NewHoldAndExtrusion;
             }
             else if (facedifference == 1 && amb > 0 && bma > 0 && anb != volumeA && anb != volumeB)
             {
-                // Removed hole and extrusion
-                return 7;
+                Program.report.AddDelayedLine("Volumetric Analysis Result: This contains a removed Extrusion and a removed Hole");
+                return VolumeCompareResultStatus.RemovedHoleAndExtrusion;
             }
-            else if (volumedifference == 0 && areadifference == 0 && facedifference == 0  && amb > 0 && bma > 0 && anb == volumeA && anb == volumeB)
+            else if (volumedifference == 0 && areadifference == 0 && facedifference == 0  && amb == 0 && bma == 0 && anb == volumeA && anb == volumeB)
             {
-                // Parts are the same
-                return 8;
+                Program.report.AddDelayedLine("Volumetric Analysis Result: These seem identical");
+                return VolumeCompareResultStatus.Identical;
+            }
+            else if (volumedifference == 0 && areadifference == 0 && facedifference == 0 && amb == 0 && bma == 0 && (anb/volumeA) >= 0.95 && (anb / volumeB) >= 0.95)
+            {
+                Program.report.AddDelayedLine("Volumetric Analysis Result: These seem identical");
+                return VolumeCompareResultStatus.Identical;
             }
             else
             {
-                // Unknown Case
                 Logger.Warn("Unknown Case:" +
                     "\n\t\t\t\t\t\t\t\t Volume A:     " + volumeA +
                     "\n\t\t\t\t\t\t\t\t Volume B:     " + volumeB +
@@ -743,7 +835,8 @@ namespace SolidCompare.Comparators
                     "\n\t\t\t\t\t\t\t\t Volume A-B:   " + amb +
                     "\n\t\t\t\t\t\t\t\t Volume B-A:   " + bma +
                     "\n\t\t\t\t\t\t\t\t Volume A&B:   " + anb);
-                return -1;
+                Program.report.AddDelayedLine("Volumetric Analysis Result: Could not identify the result, unknown case.");
+                return VolumeCompareResultStatus.Unknown;
             }
         }
     }
