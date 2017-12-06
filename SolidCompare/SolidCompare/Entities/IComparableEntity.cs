@@ -6,7 +6,6 @@ namespace SolidCompare.Entities
     public interface IComparableEntity<T>
     {
         int GetID();
-
         string GetName();
         
         CompareResult CompareTo(T target);

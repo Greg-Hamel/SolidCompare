@@ -30,7 +30,7 @@ namespace SolidCompare.Entities
         {
             ModelDoc2 refPartDoc = (ModelDoc2)SwPart;
             ModelDoc2 modPartDoc = (ModelDoc2)((Part)target).SwPart;
-            
+
             CompareResult nomenclatureResult = DocumentPropertyComparator.Instance.Compare(refPartDoc, modPartDoc);
             // Console.WriteLine(" +++++ Part " + targetPartDoc.GetPathName() + " --- " + result);
 

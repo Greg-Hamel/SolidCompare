@@ -15,6 +15,11 @@ namespace SolidCompare.Entities
         private List<Mate> mates = new List<Mate>();
         private List<BodyFeature> bodyFeatures = new List<BodyFeature>();
 
+        public string Title
+        {
+            get { return ((ModelDoc2)swAssembly).GetTitle(); }
+        }
+
         public Assembly(IAssemblyDoc swAssembly) : this(swAssembly, null)
         {
 

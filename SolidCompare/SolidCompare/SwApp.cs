@@ -250,5 +250,12 @@ namespace SolidCompare
                 }
             }
         }
+
+        public static string StripFile(string filepath)
+        {
+            int index = filepath.LastIndexOf("\\");
+
+            return filepath.Substring(0, index);
+        }
     }
 }

@@ -50,7 +50,7 @@ namespace SolidCompare
         {
             OpenFileDialog openFileDialog1 = new OpenFileDialog();
 
-            openFileDialog1.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            openFileDialog1.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\Documents\SWs";
             openFileDialog1.Filter = "Assembly(*.asm)|*.sldasm|All files (*.*)|*.*";
             openFileDialog1.FilterIndex = 1;
             openFileDialog1.RestoreDirectory = true;
@@ -67,7 +67,7 @@ namespace SolidCompare
         {
             OpenFileDialog openFileDialog2 = new OpenFileDialog();
 
-            openFileDialog2.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            openFileDialog2.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\Documents\SWs";
             openFileDialog2.Filter = "Assembly(*.asm)|*.sldasm|All files (*.*)|*.*";
             openFileDialog2.FilterIndex = 1;
             openFileDialog2.RestoreDirectory = true;

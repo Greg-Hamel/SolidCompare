@@ -73,6 +73,7 @@ namespace SolidCompare.Comparators
             }
 
             Logger.Info("Comparing '" + component1Info["Name"] + "' with '" + component2Info["Name"]);
+            Program.report.AddDelayedSubSection("'" + component1Info["Title"] + "' & '" + component2Info["Title"]);
 
             swAsbly = CreateAssembly();
             InsertComponents(swAsbly, component1, component2);
@@ -81,6 +82,7 @@ namespace SolidCompare.Comparators
             if (!cgAligned)
             {
                 Logger.Warn("CG has moved by more than 10%");
+                Program.report.AddDelayedLine("CG has moved by more than 10%");
             }
             // CloseDocs(new object[] { swAsbly, component1, component2 });
 
@@ -100,13 +102,19 @@ namespace SolidCompare.Comparators
             Logger.Info("Volume Compare:\t" + volumeDiff);
             Logger.Info("Area Compare:\t" + areaDiff);
             Logger.Info("Faces Compare:\t" + faceDiff);
+            Program.report.AddDelayedLine("Volume Compare:\t" + volumeDiff);
+            Program.report.AddDelayedLine("Area Compare:\t" + areaDiff);
+            Program.report.AddDelayedLine("Faces Compare:\t" + faceDiff);
 
             aMinusB = SubstractVolume(comparePart, body1, body2);
             Logger.Info("Volume A-B: " + aMinusB);
+            Program.report.AddDelayedLine("Volume A-B:\t\t" + aMinusB);
             bMinusA = SubstractVolume(comparePart, body2, body1);
             Logger.Info("Volume B-A: " + aMinusB);
+            Program.report.AddDelayedLine("Volume B-A:\t\t" + aMinusB);
             aAndB = CommonVolume(comparePart, body1, body2);
             Logger.Info("Volume B&A: " + aAndB);
+            Program.report.AddDelayedLine("Volume B&A:\t\t" + aAndB);
 
             // CloseDocs(new object[] { comparePart });
 
@@ -688,6 +696,7 @@ namespace SolidCompare.Comparators
             body2Volume = Math.Round(body2MassProp[3], 8);
 
             Logger.Info("Volume A:" + body1Volume + "\tVolume B:" + body2Volume);
+            Program.report.AddDelayedLine("Volume A:\t\t" + body1Volume + "\tVolume B:\t" + body2Volume);
 
             return IncDecDoubleReport(body1Volume, body2Volume, "CompareVolume()");
         }
@@ -705,6 +714,7 @@ namespace SolidCompare.Comparators
 
 
             Logger.Info("Faces A:" + body1Faces + "\tFaces B:" + body2Faces);
+            Program.report.AddDelayedLine("Faces A:\t\t" + body1Faces + "\t\tFaces B:\t" + body2Faces);
 
             return IncDecIntReport(body1Faces, body2Faces, "CompareFaces()");
         }
@@ -738,6 +748,7 @@ namespace SolidCompare.Comparators
             body2Area = Math.Round(body2Area, 8);
 
             Logger.Info("Area A:" + body1Area + "\tArea B:" + body2Area);
+            Program.report.AddDelayedLine("Area A:\t\t" + body1Area + "\t\tArea B:\t\t" + body2Area);
 
             return IncDecDoubleReport(body1Area, body2Area, "CompareArea()");
         }
@@ -770,38 +781,47 @@ namespace SolidCompare.Comparators
         {
             if (volumedifference == 0 && areadifference == 0 && amb > 0 && bma > 0 && anb > 0)
             {
+                Program.report.AddDelayedLine("Volumetric Analysis Result: This contains a moved Feature.");
                 return VolumeCompareResultStatus.MovedFeature;
             }
             else if (volumedifference == 2 && areadifference == 2 && (facedifference == 0 || facedifference == 2) && amb == 0 && bma > 0 && anb == volumeA)
             {
+                Program.report.AddDelayedLine("Volumetric Analysis Result: This contains a new Extrusion.");
                 return VolumeCompareResultStatus.NewExtrusion;
             }
             else if (volumedifference == 1 && areadifference == 1 && (facedifference == 0 || facedifference == 1) && amb > 0 && bma == 0 && anb == volumeB)
             {
+                Program.report.AddDelayedLine("Volumetric Analysis Result: This contains a removed Extrusion");
                 return VolumeCompareResultStatus.RemovedExtrusion;
             }
             else if (volumedifference == 1 && facedifference == 2 && amb > 0 && bma == 0 && anb == volumeB)
             {
+                Program.report.AddDelayedLine("Volumetric Analysis Result: This contains a new Hole");
                 return VolumeCompareResultStatus.NewHole;
             }
             else if (volumedifference == 2 && facedifference == 1 && amb == 0 && bma > 0 && anb == volumeA)
             {
+                Program.report.AddDelayedLine("Volumetric Analysis Result: This contains a removed Hole"); 
                 return VolumeCompareResultStatus.RemovedHole;
             }
             else if (facedifference == 2 && amb > 0 && bma > 0 && anb != volumeA && anb != volumeB)
             {
+                Program.report.AddDelayedLine("Volumetric Analysis Result: This contains a new Extrusion and a new Hole");
                 return VolumeCompareResultStatus.NewHoldAndExtrusion;
             }
             else if (facedifference == 1 && amb > 0 && bma > 0 && anb != volumeA && anb != volumeB)
             {
+                Program.report.AddDelayedLine("Volumetric Analysis Result: This contains a removed Extrusion and a removed Hole");
                 return VolumeCompareResultStatus.RemovedHoleAndExtrusion;
             }
             else if (volumedifference == 0 && areadifference == 0 && facedifference == 0  && amb == 0 && bma == 0 && anb == volumeA && anb == volumeB)
             {
+                Program.report.AddDelayedLine("Volumetric Analysis Result: These seem identical");
                 return VolumeCompareResultStatus.Identical;
             }
             else if (volumedifference == 0 && areadifference == 0 && facedifference == 0 && amb == 0 && bma == 0 && (anb/volumeA) >= 0.95 && (anb / volumeB) >= 0.95)
             {
+                Program.report.AddDelayedLine("Volumetric Analysis Result: These seem identical");
                 return VolumeCompareResultStatus.Identical;
             }
             else
@@ -815,6 +835,7 @@ namespace SolidCompare.Comparators
                     "\n\t\t\t\t\t\t\t\t Volume A-B:   " + amb +
                     "\n\t\t\t\t\t\t\t\t Volume B-A:   " + bma +
                     "\n\t\t\t\t\t\t\t\t Volume A&B:   " + anb);
+                Program.report.AddDelayedLine("Volumetric Analysis Result: Could not identify the result, unknown case.");
                 return VolumeCompareResultStatus.Unknown;
             }
         }
