@@ -242,8 +242,7 @@ namespace SolidCompare.Comparators
         {
             string AsblyTitle;
             AssemblyDoc newAssembly;
-
-            newAssembly = (AssemblyDoc)swApp.NewDocument(@"C:\ProgramData\SolidWorks\SOLIDWORKS 2017\templates\Assemblage.asmdot", 0, 0, 0);
+            newAssembly = (AssemblyDoc)swApp.NewDocument(@"C:\ProgramData\SolidWorks\SOLIDWORKS 2017\templates\Assembly.asmdot", 0, 0, 0);
 
             // Use the following at home only.
             // newAssembly = (AssemblyDoc)swApp.NewDocument(SwApp.Instance.GetExecutablePath() +  @"data\templates\assem.asmdot", 0, 0, 0);

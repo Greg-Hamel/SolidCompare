@@ -20,7 +20,9 @@ namespace SolidCompare.Entities
 
             // Deep comparison not implemented yet for BodyFeature
 
-            return new CompareResult(GetID(), result.Status);
+            return new CompareResult(GetID(), result.Status) {
+                Details = "Possible undetectable changes directly on the assembly through this feature; please check manually"
+            };
         }
     }
 }

@@ -20,7 +20,7 @@ namespace SolidCompare.Entities
 
         public virtual int GetID()
         {
-            return relatedFeature?.GetID() ?? 0;
+            return relatedFeature?.GetID() ?? -1;
         }
 
         public virtual string GetName()

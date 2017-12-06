@@ -30,11 +30,13 @@ namespace SolidCompare.Comparators
 
     public class CompareResult
     {
-        private int comparedId;
+        private int comparedId = -1;
+        private string displayName = "";
         private List<Object> added = new List<object>();
         private List<Object> removed = new List<object>();
         private List<Object> changed = new List<object>();
         private List<Object> unchanged = new List<object>();
+        private Object details;
 
         private CompareResultStatus status = CompareResultStatus.NotPerformed;
 
@@ -72,6 +74,18 @@ namespace SolidCompare.Comparators
             set
             {
                 comparedId = value;
+            }
+        }
+
+        public string DisplayName
+        {
+            get
+            {
+                return displayName;
+            }
+            set
+            {
+                displayName = value;
             }
         }
 
@@ -135,6 +149,18 @@ namespace SolidCompare.Comparators
             }
         }
 
+        public Object Details
+        {
+            get
+            {
+                return details;
+            }
+            set
+            {
+                details = value;
+            }
+        }
+
         public CompareResult Merge(CompareResult newResult)
         {
             added.AddRange(newResult.Added);
@@ -148,7 +174,7 @@ namespace SolidCompare.Comparators
 
         private string ListToString(string listName, List<Object> list)
         {
-            string result = list.Count > 0 ? "\t" + listName + "\n" : "";
+            string result = list.Count > 0 ? "\n\t" + listName + "\n" : "";
 
             foreach (Object element in list)
             {
@@ -160,7 +186,7 @@ namespace SolidCompare.Comparators
 
         public override string ToString()
         {
-            string result = "[COMPARING: id = " + comparedId + "] " + Status + "\n";
+            string result = "[COMPARING: [id = " + comparedId + "] " + displayName + "] " + Status + ((null != details) ? " - " + details : "");
             result += ListToString("[ADDED]", added) + ListToString("[REMOVED]", removed)
                 + ListToString("[CHANGED]", changed) + ListToString("[UNCHANGED]", unchanged);
 

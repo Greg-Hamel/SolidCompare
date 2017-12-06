@@ -39,18 +39,20 @@ namespace SolidCompare.Comparators
 
                 AbstractEntity modifiedEntityToCompare = modifiedList.Find(x => x.GetID() == referenceEntityToCompare.GetID());
 
-                if (modifiedEntityToCompare != null)
+                if (null != modifiedEntityToCompare)
                 {
                     CompareResult result = referenceEntityToCompare.CompareTo(modifiedEntityToCompare);
 
                     if (CompareResultStatus.Different == result.Status || CompareResultStatus.Similar == result.Status)
                     {
-                        changed.Add(referenceEntityToCompare);                        
-                        // changed.Add(result);
+                        // changed.Add(referenceEntityToCompare);
+                        // Add CompareResult with a displayName if changed
+                        result.DisplayName = referenceEntityToCompare.GetName();
+                        changed.Add(result);
                     }
                     else
                     {
-                        unchanged.Add(referenceEntityToCompare);                        
+                        unchanged.Add(referenceEntityToCompare);
                     }
 
                     removed.Remove(referenceEntityToCompare);
